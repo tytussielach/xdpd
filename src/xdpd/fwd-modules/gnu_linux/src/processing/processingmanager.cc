@@ -173,7 +173,7 @@ void* processingmanager::process_packets_through_pipeline(void* state){
 }
 
 //Binds a port to a processing queue of the switch (which it is already attached to)
-rofl_result_t processingmanager::bind_port_to_sw_processing_queue(ioport* port){
+rofl_result_t processingmanager::bind_port_to_sw_processing_queue(ioport_provider* port){
 
 	unsigned int index;
 	of_switch_t* sw = port->of_port_state->attached_sw;
@@ -211,7 +211,7 @@ rofl_result_t processingmanager::bind_port_to_sw_processing_queue(ioport* port){
 }	
 
 //Unbinds the port from the processing queue of the switch
-rofl_result_t processingmanager::unbind_port_from_sw_processing_queue(ioport* port){
+rofl_result_t processingmanager::unbind_port_from_sw_processing_queue(ioport_provider* port){
 	port->set_sw_processing_queue(NULL);
 	return ROFL_SUCCESS;
 }

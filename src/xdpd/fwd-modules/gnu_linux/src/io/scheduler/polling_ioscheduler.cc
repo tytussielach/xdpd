@@ -29,7 +29,7 @@ bool polling_ioscheduler::by_pass_processing = false;
 /*
 * Call port based on scheduling algorithm 
 */
-inline void polling_ioscheduler::process_port_io(ioport* port){
+inline void polling_ioscheduler::process_port_io(ioport_provider* port){
 
 	unsigned int i, q_id, n_buckets;
 	datapacket_t* pkt;
@@ -91,7 +91,7 @@ inline void polling_ioscheduler::process_port_io(ioport* port){
 /*
 * Polling stuff 
 */
-void polling_ioscheduler::update_running_ports(portgroup_state* pg, ioport*** running_ports, unsigned int* num_of_ports, unsigned int* current_hash){
+void polling_ioscheduler::update_running_ports(portgroup_state* pg, ioport_provider*** running_ports, unsigned int* num_of_ports, unsigned int* current_hash){
 
 	unsigned int i;
 
@@ -106,7 +106,7 @@ void polling_ioscheduler::update_running_ports(portgroup_state* pg, ioport*** ru
 	*num_of_ports = pg->running_ports->size();	
 
 	//Allocate new memory
-	*running_ports = (ioport**)malloc(sizeof(ioport*)*(*num_of_ports));
+	*running_ports = (ioport_provider**)malloc(sizeof(ioport_provider*)*(*num_of_ports));
 
 	//TODO: check error?
 	//if(!running_ports)
@@ -131,7 +131,7 @@ void* polling_ioscheduler::process_io(void* grp){
 
 	unsigned int i, current_hash, num_of_ports;
 	portgroup_state* pg = (portgroup_state*)grp;
-	ioport** running_ports=NULL; //C-array of ioports
+	ioport_provider** running_ports=NULL; //C-array of ioports
  
 	//Update 
 	update_running_ports(pg, &running_ports, &num_of_ports, &current_hash);	

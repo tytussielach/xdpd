@@ -16,6 +16,11 @@
 #include "../util/safevector.h" 
 #include "../util/compiler_assert.h" 
 
+//Add it here if you want to use another scheduler...
+#include "ports/mmap/ioport_mmap.h"
+#include "ports/mmap/ioport_mmapv2.h"
+
+
 /**
 * @file iomanager.h
 * @author Marc Sune<marc.sune (at) bisdn.de>
@@ -26,6 +31,10 @@
 * TODO: in depth explanation
 * 
 */
+
+//Change this if you want to use another ioport 
+typedef ioport_mmapv2 ioport_provider;
+//typedef ioport_mmap ioport_provider;
 
 #define DEFAULT_MAX_THREADS_PER_PG 5
 //WARNING: you don't want to change this, unless you really know what you are doing
@@ -49,8 +58,8 @@ public:
 	sem_t sync_sem;
 	
 	// I/O port information
-	safevector<ioport*>* ports; 		//All ports in the group
-	safevector<ioport*>* running_ports;	//Ports of the group currently performing I/O operations
+	safevector<ioport_provider*>* ports; 		//All ports in the group
+	safevector<ioport_provider*>* running_ports;	//Ports of the group currently performing I/O operations
 	uint32_t running_hash;			//Pseudo-hash over the running_ports state
 	
 };
@@ -70,14 +79,14 @@ public:
 	/*
 	* Port management (external interface)
 	*/	
-	static rofl_result_t add_port(ioport* port);
-	static rofl_result_t remove_port(ioport* port);
+	static rofl_result_t add_port(ioport_provider* port);
+	static rofl_result_t remove_port(ioport_provider* port);
 
 	/*
 	* Port control
 	*/
-	static rofl_result_t bring_port_up(ioport* port);
-	static rofl_result_t bring_port_down(ioport* port, bool mutex_locked=false);
+	static rofl_result_t bring_port_up(ioport_provider* port);
+	static rofl_result_t bring_port_down(ioport_provider* port, bool mutex_locked=false);
 	
 	/*
 	* Checkpoint for I/O threads to keep on working. Called by schedulers
@@ -119,9 +128,9 @@ protected:
 	/*
 	* Port mgmt (internal API)
 	*/
-	static int get_group_id_by_port(ioport* port);
-	static rofl_result_t add_port_to_group(unsigned int grp_id, ioport* port);
-	static rofl_result_t remove_port_from_group(unsigned int grp_id, ioport* port, bool mutex_locked=false);
+	static int get_group_id_by_port(ioport_provider* port);
+	static rofl_result_t add_port_to_group(unsigned int grp_id, ioport_provider* port);
+	static rofl_result_t remove_port_from_group(unsigned int grp_id, ioport_provider* port, bool mutex_locked=false);
 
 	/* Start/Stop portgroup threads */
 	static void start_portgroup_threads(portgroup_state* pg);

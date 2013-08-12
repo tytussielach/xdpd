@@ -16,6 +16,10 @@
 * 
 */
 
+//Useful defines
+#define EPOLL 1
+#define POLLING 2
+
 //---------------------------------------------------------//
 
 /**
@@ -47,6 +51,9 @@
 
 //Num of maximum threads (hw threads) devoted to the I/O of interfaces (Nio)
 #define IO_TOTAL_THREADS 2 
+
+//I/O RX strategy; current available values {EPOLL, POLLING}. Strongly recommended: epoll
+#define IO_STRATEGY EPOLL 
 
 //Number of output queues per interface
 #define IO_IFACE_NUM_QUEUES 8

@@ -16,7 +16,7 @@
 
 
 #include <stdio.h>
-#include <net/if.h>
+//#include <net/if.h>
 #include <rofl/datapath/afa/fwd_module.h>
 #include <rofl/common/utils/c_logger.h>
 #include <rofl/datapath/afa/cmm.h>
@@ -168,7 +168,7 @@ afa_result_t fwd_module_destroy_switch_by_dpid(const uint64_t dpid){
 
 		if(sw->logical_ports[i].attachment_state == LOGICAL_PORT_STATE_ATTACHED && sw->logical_ports[i].port){
 			//Take it out from the group
-			if( iomanager::remove_port((ioport*)sw->logical_ports[i].port->platform_port_state) != ROFL_SUCCESS ){
+			if( iomanager::remove_port((ioport_provider*)sw->logical_ports[i].port->platform_port_state) != ROFL_SUCCESS ){
 				ROFL_ERR("WARNING! Error removing port %s from the iomanager for the switch: %s. This can leave the port unusable in the future.\n", sw->logical_ports[i].port->name, sw->name);
 				assert(0);
 			}
@@ -285,7 +285,7 @@ afa_result_t fwd_module_attach_port_to_switch(uint64_t dpid, const char* name, u
 	}
 	
 	//Add it to the iomanager
-	if(iomanager::add_port((ioport*)port->platform_port_state) != ROFL_SUCCESS){
+	if(iomanager::add_port((ioport_provider*)port->platform_port_state) != ROFL_SUCCESS){
 		return AFA_FAILURE;	
 	}
 
@@ -324,7 +324,7 @@ afa_result_t fwd_module_detach_port_from_switch(uint64_t dpid, const char* name)
 		return AFA_FAILURE;
 	
 	//Remove it from the iomanager
-	if(iomanager::remove_port((ioport*)port->platform_port_state) != ROFL_SUCCESS){
+	if(iomanager::remove_port((ioport_provider*)port->platform_port_state) != ROFL_SUCCESS){
 		ROFL_ERR("Error removing port %s from the iomanager. The port may become unusable...\n",port->name);
 		assert(0);
 	}
@@ -364,7 +364,7 @@ afa_result_t fwd_module_detach_port_from_switch_at_port_num(uint64_t dpid, const
 		return AFA_FAILURE;
 
 	//Remove it from the iomanager
-	if(iomanager::remove_port((ioport*)port->platform_port_state) != ROFL_SUCCESS){
+	if(iomanager::remove_port((ioport_provider*)port->platform_port_state) != ROFL_SUCCESS){
 		ROFL_ERR("Error removing port %s from the iomanager. The port may become unusable...\n",port->name);
 		assert(0);
 	}
@@ -403,7 +403,7 @@ afa_result_t fwd_module_enable_port(const char* name){
 	//Bring it up
 	if(port->attached_sw){
 		//Port is attached and belonging to a port group. Instruct I/O manager to start the port
-		if(iomanager::bring_port_up((ioport*)port->platform_port_state)!=ROFL_SUCCESS)
+		if(iomanager::bring_port_up((ioport_provider*)port->platform_port_state)!=ROFL_SUCCESS)
 			return AFA_FAILURE;
 	}else{
 		//The port is not attached. Only bring it up (ifconfig up)
@@ -436,7 +436,7 @@ afa_result_t fwd_module_disable_port(const char* name){
 	//Bring it down
 	if(port->attached_sw){
 		//Port is attached and belonging to a port group. Instruct I/O manager to stop the port
-		if( iomanager::bring_port_down((ioport*)port->platform_port_state)!=ROFL_SUCCESS)
+		if( iomanager::bring_port_down((ioport_provider*)port->platform_port_state)!=ROFL_SUCCESS)
 			return AFA_FAILURE;
 	}else{
 		//The port is not attached. Only bring it down (ifconfig down)
@@ -471,7 +471,7 @@ afa_result_t fwd_module_enable_port_by_num(uint64_t dpid, unsigned int port_num)
 		return AFA_FAILURE;
 
 	//Call I/O manager to bring it up
-	if(iomanager::bring_port_up((ioport*)lsw->logical_ports[port_num].port->platform_port_state) != ROFL_SUCCESS)
+	if(iomanager::bring_port_up((ioport_provider*)lsw->logical_ports[port_num].port->platform_port_state) != ROFL_SUCCESS)
 		return AFA_FAILURE;
 	
 	if(cmm_notify_port_status_changed(lsw->logical_ports[port_num].port)!=AFA_SUCCESS)
@@ -501,7 +501,7 @@ afa_result_t fwd_module_disable_port_by_num(uint64_t dpid, unsigned int port_num
 		return AFA_FAILURE;
 
 	//Call I/O manager to bring it down
-	if(iomanager::bring_port_down((ioport*)lsw->logical_ports[port_num].port->platform_port_state) != ROFL_SUCCESS)
+	if(iomanager::bring_port_down((ioport_provider*)lsw->logical_ports[port_num].port->platform_port_state) != ROFL_SUCCESS)
 		return AFA_FAILURE;
 	
 	if(cmm_notify_port_status_changed(lsw->logical_ports[port_num].port)!=AFA_SUCCESS)

@@ -13,7 +13,7 @@
 #include <rofl.h>
 #include <rofl/datapath/pipeline/openflow/of_switch.h>
 #include "../util/safevector.h" 
-#include "../io/ports/ioport.h"
+#include "../io/iomanager.h"
 #include "ls_internal_state.h"
 #include "../config.h" 
 
@@ -66,12 +66,12 @@ public:
 	/**
 	* Binds a port to a processing queue of the switch (which it is already attached to)
 	*/
-	static rofl_result_t bind_port_to_sw_processing_queue(ioport* port);	
+	static rofl_result_t bind_port_to_sw_processing_queue(ioport_provider* port);	
 	
 	/**
 	* Unbinds the port from the processing queue of the switch
 	*/
-	static rofl_result_t unbind_port_from_sw_processing_queue(ioport* port);
+	static rofl_result_t unbind_port_from_sw_processing_queue(ioport_provider* port);
 		
 #if DEBUG 
 	/* 

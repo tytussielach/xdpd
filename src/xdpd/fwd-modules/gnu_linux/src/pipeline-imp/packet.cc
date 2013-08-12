@@ -10,6 +10,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "../io/iomanager.h"
 #include "../io/datapacketx86.h"
 #include "../io/bufferpool.h"
 #include "../io/ports/ioport.h"
@@ -441,7 +442,7 @@ static void platform_packet_output_single_packet(datapacket_t* pkt, datapacketx8
 #endif
 
 		//Schedule in the port
-		ioport* ioport_inst = (ioport*)port->platform_port_state; 
+		ioport_provider* ioport_inst = (ioport_provider*)port->platform_port_state; 
 		ioport_inst->enqueue_packet(pkt, pack->output_queue);
 	
 		//Packet must never be retured to the buffer pool, the port will do that

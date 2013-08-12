@@ -30,7 +30,7 @@
 *
 */
 
-static void fill_port_queues(switch_port_t* port, ioport* io_port){
+static void fill_port_queues(switch_port_t* port, ioport_provider* io_port){
 
 	unsigned int i;
 	char queue_name[PORT_QUEUE_MAX_LEN_NAME];
@@ -176,13 +176,13 @@ static switch_port_t* fill_port(int sock, struct ifaddrs* ifa){
 
 	//Initialize MMAP-based port
 	//Change this line to use another ioport...
-	ioport* io_port = new ioport_mmapv2(port);
+	ioport_provider* io_port = new ioport_mmapv2(port);
 	//iport* io_port = new ioport_mmap(port);
 
 	port->platform_port_state = (platform_port_state_t*)io_port;
 	
 	//Fill port queues
-	fill_port_queues(port, (ioport*)port->platform_port_state);
+	fill_port_queues(port, (ioport_provider*)port->platform_port_state);
 	
 	return port;
 }
@@ -234,13 +234,13 @@ rofl_result_t discover_physical_ports(){
 
 rofl_result_t destroy_port(switch_port_t* port){
 	
-	ioport* ioport_instance;
+	ioport_provider* ioport_instance;
 
 	if(!port)
 		return ROFL_FAILURE;
 	
 	//Destroy the inner driver-dependant structures
-	ioport_instance = (ioport*)port->platform_port_state;	
+	ioport_instance = (ioport_provider*)port->platform_port_state;	
 	delete ioport_instance;
 
 	//Delete port from the pipeline library
@@ -280,7 +280,7 @@ rofl_result_t destroy_ports(){
 */
 rofl_result_t enable_port(platform_port_state_t* ioport_instance){
 
-	ioport* port = (ioport*)ioport_instance; 
+	ioport_provider* port = (ioport_provider*)ioport_instance; 
 
 	if(port->enable() == ROFL_FAILURE)
 		return ROFL_FAILURE;
@@ -293,7 +293,7 @@ rofl_result_t enable_port(platform_port_state_t* ioport_instance){
 */
 rofl_result_t disable_port(platform_port_state_t* ioport_instance){
 
-	class ioport* port = (ioport*)ioport_instance; 
+	ioport_provider* port = (ioport_provider*)ioport_instance; 
 
 	if(port->disable() == ROFL_FAILURE)
 		return ROFL_FAILURE;

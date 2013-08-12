@@ -28,7 +28,7 @@ bool epoll_ioscheduler::by_pass_processing = false;
 /*
 * Call port based on scheduling algorithm 
 */
-inline void epoll_ioscheduler::process_port_io(ioport* port){
+inline void epoll_ioscheduler::process_port_io(ioport_provider* port){
 
 	unsigned int i, q_id, n_buckets;
 	datapacket_t* pkt;
@@ -91,7 +91,7 @@ inline void epoll_ioscheduler::process_port_io(ioport* port){
 /*
 * EPOLL add fd
 */
-inline void epoll_ioscheduler::add_fd_epoll(struct epoll_event* ev, int epfd, ioport* port, int fd){
+inline void epoll_ioscheduler::add_fd_epoll(struct epoll_event* ev, int epfd, ioport_provider* port, int fd){
 
 	ev->events = EPOLLIN | EPOLLPRI /*| EPOLLET*/;
 	ev->data.fd = fd;
@@ -194,14 +194,14 @@ void* epoll_ioscheduler::process_io(void* grp){
 			//Check if this is really necessary
 			//Timeout loop over ALL fds 
 			//for(unsigned int i=0;i<current_num_of_ports*2;i+=2){
-				//epoll_ioscheduler::process_port_io((ioport*)ev[i].data.ptr);
+				//epoll_ioscheduler::process_port_io((ioport_provider*)ev[i].data.ptr);
 			//}	
 		}else{	
 			//std::cerr<<"Active fds.."<<std::endl;
 			//Loop over active fd
 			//FIXME: skip double port process_port_io (both input&output fd signal)
 			for(int i = 0;i<res;i++){
-				epoll_ioscheduler::process_port_io((ioport*)events[i].data.ptr);
+				epoll_ioscheduler::process_port_io((ioport_provider*)events[i].data.ptr);
 			}	
 		}
 		//Check for updates in the running ports 

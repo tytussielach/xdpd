@@ -6,10 +6,6 @@
 #include "bufferpool.h"
 #include "../processing/processingmanager.h"
 
-//Add it here if you want to use another scheduler...
-#include "scheduler/epoll_ioscheduler.h"
-#include "scheduler/polling_ioscheduler.h"
-
 /* Static members */
 unsigned int iomanager::num_of_groups = 0;
 unsigned int iomanager::curr_group_sched_pointer = 0;
@@ -18,9 +14,17 @@ pthread_mutex_t iomanager::mutex = PTHREAD_MUTEX_INITIALIZER;
 //std::vector<portgroup_state> iomanager::portgroups; //TODO: maybe add a pre-reserved memory here
 safevector<portgroup_state*> iomanager::portgroups; //TODO: maybe add a pre-reserved memory here
 
+//Add it here if you want to use another scheduler...
+#include "scheduler/epoll_ioscheduler.h"
+#include "scheduler/polling_ioscheduler.h"
+
 //Change this if you want to use another scheduler
-typedef epoll_ioscheduler ioscheduler_provider;
-//typedef polling_ioscheduler ioscheduler_provider;
+#if IO_STRATEGY == POLLING
+	typedef polling_ioscheduler ioscheduler_provider;
+#else
+	//Default
+	typedef epoll_ioscheduler ioscheduler_provider;
+#endif
 
 
 
@@ -63,7 +67,7 @@ INIT_ERROR:
 /*
 * Port management (external interface)
 */	
-rofl_result_t iomanager::add_port(ioport* port){
+rofl_result_t iomanager::add_port(ioport_provider* port){
 
 	int grp_id;
 
@@ -77,7 +81,7 @@ rofl_result_t iomanager::add_port(ioport* port){
 	return add_port_to_group(grp_id, port);	
 }
 
-rofl_result_t iomanager::remove_port(ioport* port){
+rofl_result_t iomanager::remove_port(ioport_provider* port){
 	
 	int grp_id;
 
@@ -96,7 +100,7 @@ rofl_result_t iomanager::remove_port(ioport* port){
 /*
 * Stop a particular port (regardless of the group which is belonging) 
 */
-rofl_result_t iomanager::bring_port_down(ioport* port, bool mutex_locked){
+rofl_result_t iomanager::bring_port_down(ioport_provider* port, bool mutex_locked){
 
 	unsigned int i,j;
 
@@ -154,7 +158,7 @@ rofl_result_t iomanager::bring_port_down(ioport* port, bool mutex_locked){
 /*
 * Start a particular port. The port must be already contained in one of the portgroups. If portgroup is not running, pg threads are going to be started.
 */
-rofl_result_t iomanager::bring_port_up(ioport* port){
+rofl_result_t iomanager::bring_port_up(ioport_provider* port){
 
 	unsigned int i,j;
 
@@ -289,8 +293,8 @@ int iomanager::create_group(unsigned int num_of_threads, bool mutex_locked){
 	//Init struct
 	pg->num_of_threads = num_of_threads;
 	pg->running_hash = 0;
-	pg->ports = new safevector<ioport*>();	
-	pg->running_ports = new safevector<ioport*>();	
+	pg->ports = new safevector<ioport_provider*>();	
+	pg->running_ports = new safevector<ioport_provider*>();	
 	sem_init(&pg->sync_sem,0,0); //Init to 0
 
 	if(!mutex_locked){
@@ -364,12 +368,12 @@ rofl_result_t iomanager::delete_group(unsigned int grp_id){
 /*
 * Returns the id of the portgroup in which the port is currently contained. iomanager:ROFL_FAILURE (-1) if not found. 
 */
-int iomanager::get_group_id_by_port(ioport* port){
+int iomanager::get_group_id_by_port(ioport_provider* port){
 	
 	unsigned int i,j;
 	
 	for(i=0;i<portgroups.size();++i){
-		safevector<ioport*>* ports = portgroups[i]->ports;
+		safevector<ioport_provider*>* ports = portgroups[i]->ports;
 			
 		for(j=0;j<ports->size();j++){
 			if( (*ports)[j] == port )	
@@ -384,7 +388,7 @@ int iomanager::get_group_id_by_port(ioport* port){
 /*
 * Adds port to the portgroup. Addition of the port does NOT bring it up.
 */
-rofl_result_t iomanager::add_port_to_group(unsigned int grp_id, ioport* port){
+rofl_result_t iomanager::add_port_to_group(unsigned int grp_id, ioport_provider* port){
 
 	unsigned int i;	
 	portgroup_state* pg;
@@ -428,7 +432,7 @@ rofl_result_t iomanager::add_port_to_group(unsigned int grp_id, ioport* port){
 /*
 * Remove port to the portgroup. Removal implicitely stops the port (brings it down).
 */
-rofl_result_t iomanager::remove_port_from_group(unsigned int grp_id, ioport* port, bool mutex_locked){
+rofl_result_t iomanager::remove_port_from_group(unsigned int grp_id, ioport_provider* port, bool mutex_locked){
 	
 	portgroup_state* pg;
 

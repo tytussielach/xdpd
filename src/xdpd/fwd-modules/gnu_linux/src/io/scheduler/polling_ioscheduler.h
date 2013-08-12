@@ -10,6 +10,7 @@
 #include <vector> 
 #include <iostream> 
 #include "ioscheduler.h" 
+#include "../iomanager.h"
 #include "../ports/ioport.h"
 
 #include <rofl/datapath/pipeline/openflow/of_switch.h>
@@ -60,10 +61,10 @@ protected:
 
 	/* Methods */
 	//WRR
-	static void process_port_io(ioport* port);
+	static void process_port_io(ioport_provider* port);
 
 	//Polling stuff
-	static void update_running_ports(portgroup_state* pg, ioport*** running_ports, unsigned int* num_of_ports, unsigned int* current_hash);
+	static void update_running_ports(portgroup_state* pg, ioport_provider*** running_ports, unsigned int* num_of_ports, unsigned int* current_hash);
 
 	/* Debugging stuff */
 #ifdef DEBUG

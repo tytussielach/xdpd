@@ -5,10 +5,10 @@
 #include <rofl/datapath/pipeline/openflow/openflow12/pipeline/of12_pipeline.h>
 #include <rofl/datapath/pipeline/openflow/openflow12/pipeline/of12_flow_entry.h>
 #include <rofl/datapath/pipeline/openflow/openflow12/pipeline/of12_statistics.h>
+#include "../../../io/iomanager.h"
 #include "../../../io/bufferpool.h"
 #include "../../../io/datapacket_storage.h"
 #include "../../../io/datapacketx86.h"
-#include "../../../io/ports/ioport.h"
 #include "../../../processing/ls_internal_state.h"
 
 //FIXME move this definition out of here
@@ -43,12 +43,12 @@ static inline bool action_group_of12_packet_in_contains_output(of12_action_group
 afa_result_t fwd_module_of12_set_port_drop_received_config(uint64_t dpid, unsigned int port_num, bool drop_received){
 	
 	switch_port_t* port = physical_switch_get_port_by_num(dpid,port_num);
-	ioport* ioport_instance;
+	ioport_provider* ioport_instance;
 
 	if(!port)
 		return AFA_FAILURE;
 
-	ioport_instance = (ioport*)port->platform_port_state;	
+	ioport_instance = (ioport_provider*)port->platform_port_state;	
 
 	//Set flag
 	if(ioport_instance->set_drop_received_config(drop_received) != ROFL_SUCCESS )
@@ -68,12 +68,12 @@ afa_result_t fwd_module_of12_set_port_drop_received_config(uint64_t dpid, unsign
  */
 afa_result_t fwd_module_of12_set_port_forward_config(uint64_t dpid, unsigned int port_num, bool forward){
 	switch_port_t* port = physical_switch_get_port_by_num(dpid,port_num);
-	ioport* ioport_instance;
+	ioport_provider* ioport_instance;
 
 	if(!port)
 		return AFA_FAILURE;
 
-	ioport_instance = (ioport*)port->platform_port_state;	
+	ioport_instance = (ioport_provider*)port->platform_port_state;	
 
 	//Set flag
 	if(ioport_instance->set_forward_config(forward) != ROFL_SUCCESS )
@@ -93,12 +93,12 @@ afa_result_t fwd_module_of12_set_port_forward_config(uint64_t dpid, unsigned int
 afa_result_t fwd_module_of12_set_port_generate_packet_in_config(uint64_t dpid, unsigned int port_num, bool generate_packet_in){
 	
 	switch_port_t* port = physical_switch_get_port_by_num(dpid,port_num);
-	ioport* ioport_instance;
+	ioport_provider* ioport_instance;
 
 	if(!port)
 		return AFA_FAILURE;
 
-	ioport_instance = (ioport*)port->platform_port_state;	
+	ioport_instance = (ioport_provider*)port->platform_port_state;	
 
 	//Set flag
 	if(ioport_instance->set_generate_packet_in_config(generate_packet_in) != ROFL_SUCCESS )
@@ -119,12 +119,12 @@ afa_result_t fwd_module_of12_set_port_generate_packet_in_config(uint64_t dpid, u
 afa_result_t fwd_module_of12_set_port_advertise_config(uint64_t dpid, unsigned int port_num, uint32_t advertise){
 
 	switch_port_t* port = physical_switch_get_port_by_num(dpid,port_num);
-	ioport* ioport_instance;
+	ioport_provider* ioport_instance;
 
 	if(!port)
 		return AFA_FAILURE;
 
-	ioport_instance = (ioport*)port->platform_port_state;	
+	ioport_instance = (ioport_provider*)port->platform_port_state;	
 
 	//Set flag
 	if(ioport_instance->set_advertise_config(advertise) != ROFL_SUCCESS )

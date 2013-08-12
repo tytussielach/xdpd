@@ -11,6 +11,7 @@
 #include <vector> 
 #include <iostream> 
 #include "ioscheduler.h" 
+#include "../iomanager.h"
 #include "../ports/ioport.h"
 
 /**
@@ -56,10 +57,10 @@ protected:
 
 	/* Methods */
 	//WRR
-	static void process_port_io(ioport* port);
+	static void process_port_io(ioport_provider* port);
 
 	//EPOLL related	
-	static void add_fd_epoll(struct epoll_event* ev, int epfd, ioport* port, int fd);
+	static void add_fd_epoll(struct epoll_event* ev, int epfd, ioport_provider* port, int fd);
 	static void init_or_update_fds(portgroup_state* pg, int* epfd, struct epoll_event** ev, struct epoll_event** events, unsigned int* current_num_of_ports, unsigned int* current_hash );
 
 
