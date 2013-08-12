@@ -1075,3 +1075,19 @@ rofl_pktclassifier::get_pkt_len(rofl::fframe *from, rofl::fframe *to)
 	return len;
 }
 
+/*
+* Implementation of the (necessary?) wrappers 
+*/
+rofl_result_t rofl_pktclassifier::pkt_push(unsigned int num_of_bytes, unsigned int offset){
+	return pkt->push(num_of_bytes,offset);
+}
+rofl_result_t rofl_pktclassifier::pkt_pop(unsigned int num_of_bytes, unsigned int offset){
+	return pkt->pop(num_of_bytes,offset);
+}
+rofl_result_t rofl_pktclassifier::pkt_push(uint8_t* push_point, unsigned int num_of_bytes){
+	return pkt->push(push_point,num_of_bytes);
+}
+rofl_result_t rofl_pktclassifier::pkt_pop(uint8_t* pop_point, unsigned int num_of_bytes){ 
+	return pkt->pop(pop_point,num_of_bytes);
+}
+

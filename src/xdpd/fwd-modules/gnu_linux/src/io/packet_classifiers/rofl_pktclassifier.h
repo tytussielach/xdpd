@@ -30,14 +30,13 @@ public:
 	}; 
 	virtual ~rofl_pktclassifier()
 	{
-		classify_reset();
 	};
 
 	/*
 	* Main classification methods. 
 	*/
-	virtual void classify(void);
-	virtual void classify_reset(void);
+	/*virtual*/ void classify(void);
+	/*virtual*/ void classify_reset(void);
 
 	
 	/*
@@ -45,41 +44,41 @@ public:
 	*/	
 	template<class T> T* 	header(int idx) const;
 
-	virtual rofl::fetherframe* 	ether(int idx = 0) const;
-	virtual rofl::fvlanframe* 	vlan(int idx = 0) 	const;
-	virtual rofl::fmplsframe* 	mpls(int idx = 0) 	const;
-	virtual rofl::farpv4frame* 	arpv4(int idx = 0) const;
-	virtual rofl::fipv4frame* 	ipv4(int idx = 0) 	const;
-	virtual rofl::ficmpv4frame* icmpv4(int idx = 0) const;
-	virtual rofl::fudpframe* 	udp(int idx = 0) 	const;
-	virtual rofl::ftcpframe* 	tcp(int idx = 0) 	const;
-	virtual rofl::fsctpframe* 	sctp(int idx = 0) 	const;
-	virtual rofl::fpppoeframe* 	pppoe(int idx = 0) const;
-	virtual rofl::fpppframe* 	ppp(int idx = 0) 	const;
+	/*virtual*/ rofl::fetherframe* 	ether(int idx = 0) const;
+	/*virtual*/ rofl::fvlanframe* 	vlan(int idx = 0) 	const;
+	/*virtual*/ rofl::fmplsframe* 	mpls(int idx = 0) 	const;
+	/*virtual*/ rofl::farpv4frame* 	arpv4(int idx = 0) const;
+	/*virtual*/ rofl::fipv4frame* 	ipv4(int idx = 0) 	const;
+	/*virtual*/ rofl::ficmpv4frame* icmpv4(int idx = 0) const;
+	/*virtual*/ rofl::fudpframe* 	udp(int idx = 0) 	const;
+	/*virtual*/ rofl::ftcpframe* 	tcp(int idx = 0) 	const;
+	/*virtual*/ rofl::fsctpframe* 	sctp(int idx = 0) 	const;
+	/*virtual*/ rofl::fpppoeframe* 	pppoe(int idx = 0) const;
+	/*virtual*/ rofl::fpppframe* 	ppp(int idx = 0) 	const;
 
 	/*
 	 * pop operations
 	 */
-	virtual void pop_vlan(void);
-	virtual void pop_mpls(uint16_t ether_type);
-	virtual void pop_pppoe(uint16_t ether_type);
+	/*virtual*/ void pop_vlan(void);
+	/*virtual*/ void pop_mpls(uint16_t ether_type);
+	/*virtual*/ void pop_pppoe(uint16_t ether_type);
 
 	/*
 	 * push operations
 	 */
-	virtual rofl::fvlanframe* 	push_vlan(uint16_t ether_type);
-	virtual rofl::fmplsframe* 	push_mpls(uint16_t ether_type);
-	virtual rofl::fpppoeframe* 	push_pppoe(uint16_t ether_type);
+	/*virtual*/ rofl::fvlanframe* 	push_vlan(uint16_t ether_type);
+	/*virtual*/ rofl::fmplsframe* 	push_mpls(uint16_t ether_type);
+	/*virtual*/ rofl::fpppoeframe* 	push_pppoe(uint16_t ether_type);
 
 	/*
 	* dump
 	*/
-	virtual void dump(void);
+	/*virtual*/ void dump(void);
 
 	/** returns length of parsed packet (may be shortened during Packet-In)
 	 *
 	 */
-	virtual size_t
+	/*virtual*/ size_t
 	get_pkt_len(
 			rofl::fframe *from = (rofl::fframe*)0,
 			rofl::fframe   *to = (rofl::fframe*)0);
@@ -146,6 +145,15 @@ protected:
 	void parse_udp(uint8_t *data, size_t datalen);
 	void parse_tcp(uint8_t *data, size_t datalen);
 	void parse_sctp	(uint8_t *data, size_t datalen);
+
+	/*
+	* Wrappers for pkt push and pop so that we can use friendship in derived classes
+	*/
+	rofl_result_t pkt_push(unsigned int num_of_bytes, unsigned int offset=0);
+	rofl_result_t pkt_pop(unsigned int num_of_bytes, unsigned int offset=0);
+
+	rofl_result_t pkt_push(uint8_t* push_point, unsigned int num_of_bytes);
+	rofl_result_t pkt_pop(uint8_t* pop_point, unsigned int num_of_bytes);
 
 };
 

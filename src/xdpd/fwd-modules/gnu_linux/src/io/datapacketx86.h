@@ -8,10 +8,10 @@
 #include <bitset>
 #include <inttypes.h>
 #include <sys/types.h>
+#include <sys/uio.h>
 #include <rofl.h>
 #include <rofl/datapath/pipeline/openflow/of_switch.h>
 
-#include "packet_classifiers/packetclassifier.h"
 
 /**
 * @file datapacketx86.h
@@ -23,6 +23,13 @@
 * @brief Data packet abstraction for an x86 (GNU/Linux)
 *
 */
+
+//Change this if you want to use another classifier
+//class rofl_pktclassifier; 
+//typedef rofl_pktclassifier pktclassifier_provider;
+class static_pktclassifier;
+typedef static_pktclassifier pktclassifier_provider;
+
 
 /* Auxiliary state for x86 datapacket*/
 //buffering status
@@ -81,15 +88,14 @@ public: // methods
 	rofl_result_t transfer_to_user_space(void);
 
 	//Header packet classification	
-	friend class packetclassifier;
-	packetclassifier* headers;
+	friend class rofl_pktclassifier; 
+	friend class static_pktclassifier; 
+	pktclassifier_provider* headers;
 	
 
 	//Other	
 	friend std::ostream& operator<<(std::ostream& os, datapacketx86& pack);
-	inline void dump(void) {
-		headers->dump();
-	}
+	inline void dump(void);
 
 private:
 	//HOST buffer size
@@ -135,6 +141,12 @@ private:
 	inline rofl_result_t pop(uint8_t* pop_point, unsigned int num_of_bytes);
 
 };
+
+//Include here the classifier you want to use
+#include "packet_classifiers/packetclassifier.h"
+#include "packet_classifiers/rofl_pktclassifier.h"
+#include "packet_classifiers/static_pktclassifier.h"
+
 
 /*
 * Inline functions
@@ -227,6 +239,11 @@ datapacketx86::init_internal_buffer_location_defaults(
 }
 
 
+void
+datapacketx86::dump()
+{
+	headers->dump();
+}
 
 /*
  * Push&pop operations

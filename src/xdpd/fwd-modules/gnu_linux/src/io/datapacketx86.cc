@@ -1,9 +1,5 @@
 #include "datapacketx86.h"
 
-//Include here the classifier you want to use
-#include "packet_classifiers/rofl_pktclassifier.h"
-#include "packet_classifiers/static_pktclassifier.h"
-
 /*
  * x86 datapacket related methods
  */
@@ -26,7 +22,7 @@ datapacketx86::datapacketx86() :
 	 icmpv4_recalc_checksum(false),
 	 pktin_table_id(0),
 	 pktin_reason(0),
-	 headers(new pktclassifier(this)),
+	 headers(new pktclassifier_provider(this)),
 	 buffering_status(X86_DATAPACKET_BUFFER_IS_EMPTY)
 {
 
