@@ -21,8 +21,6 @@ libfwd_module_gnu_linux_io_la_SOURCES = \
 	datapacket_storage_c_wrapper.h \
 	datapacketx86.cc \
 	datapacketx86.h \
-	datapacketx86_c_wrapper.cc \
-	datapacketx86_c_wrapper.h \
 	iface_utils.cc\
 	iface_utils.h\
 	iomanager.cc \
