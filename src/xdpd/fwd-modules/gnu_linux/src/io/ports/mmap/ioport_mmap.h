@@ -43,12 +43,12 @@ public:
 			int frame_size = 2048,
 			unsigned int num_queues = MMAP_DEFAULT_NUM_OF_QUEUES);
 
-	virtual
+	/*virtual*/
 	~ioport_mmap();
 
 	//Enque packet for transmission(blocking)
-	virtual void
-	enqueue_packet(datapacket_t* pkt, unsigned int q_id);
+	/*virtual*/
+	void enqueue_packet(datapacket_t* pkt, unsigned int q_id);
 
 
 	/**
@@ -62,14 +62,14 @@ public:
 	read_loop(int fd, int read_max);
 
 	//Non-blocking read and write
-	virtual datapacket_t*
+	/*virtual*/ datapacket_t*
 	read(void);
 
-	virtual unsigned int
+	/*virtual*/ unsigned int
 	write(unsigned int q_id, unsigned int num_of_buckets);
 
 	// Get read fds. Return -1 if do not exist
-	inline virtual int
+	inline /*virtual*/ int
 	get_read_fd(void){
 		if(rx)
 			return rx->sd;
@@ -77,7 +77,7 @@ public:
 	};
 
 	// Get write fds. Return -1 if do not exist
-	inline virtual int
+	inline /*virtual*/ int
 	get_write_fd(void){
 		return notify_pipe[READ];
 	};
@@ -95,12 +95,12 @@ public:
 	/**
 	 * Sets the port administratively up. This MUST change the of_port_state appropiately
 	 */
-	virtual rofl_result_t enable(void);
+	/*virtual*/ rofl_result_t enable(void);
 
 	/**
 	 * Sets the port administratively down. This MUST change the of_port_state appropiately
 	 */
-	virtual rofl_result_t disable(void);
+	/*virtual*/ rofl_result_t disable(void);
 
 
 protected:

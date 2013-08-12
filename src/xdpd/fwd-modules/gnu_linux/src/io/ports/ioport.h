@@ -22,6 +22,14 @@
 *
 */
 
+//Instead of defininig virtual (pure virtual) functions, just
+//abort on calling abstract methods
+#define IOPORT_UNIMPLEMENTED_METHOD()\
+	do{\
+		fprintf(stderr,"IOPORT: unimplemented method by ioport provider. Aborting...\n");\
+		exit(-1);\
+	}while(0) 
+
 class ioport{
 
 public:
@@ -61,7 +69,9 @@ public:
 	* Function cannot assume that q_id is a valid id, so it MUST do the appropiate
 	* checks before attempting to enqueue the packet.
 	*/
-	virtual void enqueue_packet(datapacket_t* pkt, unsigned int q_id)=0;
+	/*virtual*/ void enqueue_packet(datapacket_t* pkt, unsigned int q_id){
+		IOPORT_UNIMPLEMENTED_METHOD();
+	};
 
 	//Non-blocking read and write
 	/**
@@ -70,7 +80,9 @@ public:
 	*
 	* This method must be NON-BLOCKING
 	*/
-	virtual datapacket_t* read(void)=0;
+	/*virtual*/ datapacket_t* read(void){
+		IOPORT_UNIMPLEMENTED_METHOD();
+	};
 
 	/**
 	* @brief Write in the wire up to up_to_buckets number of packets from queue q_id
@@ -82,19 +94,25 @@ public:
 	*
 	* @return up_to_buckets - (number of buckets used)
 	*/
-	virtual unsigned int write(unsigned int q_id, unsigned int up_to_buckets)=0;
+	/*virtual*/ unsigned int write(unsigned int q_id, unsigned int up_to_buckets){
+		IOPORT_UNIMPLEMENTED_METHOD();
+	};
 
 	//Get read&write fds. Return -1 if do not exist
-	virtual int get_read_fd(void)=0;
-	virtual int get_write_fd(void)=0;
+	/*virtual*/ int get_read_fd(void){
+		IOPORT_UNIMPLEMENTED_METHOD();
+	};
+	/*virtual*/ int get_write_fd(void){
+		IOPORT_UNIMPLEMENTED_METHOD();
+	};
 
 	//Get buffer status; generally used to create "smart" schedulers. TODO: evaluate if they should be 
-	//non-virtual (inline+virtual does not make a lot of sense here), and evaluate if they are necessary
+	//non-/*virtual*/ (inline+virtual does not make a lot of sense here), and evaluate if they are necessary
 	//at all.
-	virtual inline circular_queue_state_t get_input_queue_state(void){
+	/*virtual*/ inline circular_queue_state_t get_input_queue_state(void){
 		return input_queue.get_queue_state();
 	}; 
-	virtual inline circular_queue_state_t get_output_queue_state(unsigned int q_id=0){
+	/*virtual*/ inline circular_queue_state_t get_output_queue_state(unsigned int q_id=0){
 		if(q_id<num_of_queues)
 			return output_queues[q_id].get_queue_state();
 		else{
@@ -107,41 +125,45 @@ public:
 	* @brief Retrieves the number of buffers required by the port to be operating at line-rate; 
 	* must be power of 2 
 	*/
-	virtual unsigned int get_required_buffers(void){ return NUM_OF_REQUIRED_BUFFERS;}; 
+	/*virtual*/ unsigned int get_required_buffers(void){ return NUM_OF_REQUIRED_BUFFERS;}; 
 	
 	/**
 	 * Sets the port administratively up. This MUST change the of_port_state appropiately
 	 */
-	virtual rofl_result_t enable(void)=0;
+	/*virtual*/ rofl_result_t enable(void){
+		IOPORT_UNIMPLEMENTED_METHOD();
+	};
 
 	/**
 	 * Sets the port administratively down. This MUST change the of_port_state appropiately
 	 */
-	virtual rofl_result_t disable(void)=0;
+	/*virtual*/ rofl_result_t disable(void){
+		IOPORT_UNIMPLEMENTED_METHOD();
+	};
 
 	/**
 	 * Sets the port receiving behaviour. This MUST change the of_port_state appropiately
 	 * Inherited classes may override this method if they have specific things to do.
 	 */
-	virtual rofl_result_t set_drop_received_config(bool drop_received);
+	/*virtual*/ rofl_result_t set_drop_received_config(bool drop_received);
 
 	/**
 	 * Sets the port output behaviour. This MUST change the of_port_state appropiately
 	 * Inherited classes may override this method if they have specific things to do.
 	 */
-	virtual rofl_result_t set_forward_config(bool forward_packets);
+	/*virtual*/ rofl_result_t set_forward_config(bool forward_packets);
 
 	/**
 	 * Sets the port Openflow specific behaviour for non matching packets (PACKET_IN). This MUST change the of_port_state appropiately
 	 * Inherited classes may override this method if they have specific things to do.
 	 */
-	virtual rofl_result_t set_generate_packet_in_config(bool generate_pkt_in);
+	/*virtual*/ rofl_result_t set_generate_packet_in_config(bool generate_pkt_in);
 
 	/**
 	 * Sets the port advertised features. This MUST change the of_port_state appropiately
 	 * Inherited classes may override this method if they have specific things to do.
 	 */
-	virtual rofl_result_t set_advertise_config(uint32_t advertised);
+	/*virtual*/ rofl_result_t set_advertise_config(uint32_t advertised);
 
 	/**
 	 * Sets the port switch queue where processed packets shall be sent.
