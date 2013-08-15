@@ -10,6 +10,7 @@
 #include <rofl/datapath/pipeline/platform/cutil.h>
 #include "../iomanager.h"
 #include "../bufferpool.h"
+#include "../../util/likely.h"
 #include "../../util/circular_queue.h"
 
 /*
@@ -33,7 +34,7 @@ inline void epoll_ioscheduler::process_port_io(ioport_provider* port){
 	unsigned int i, q_id, n_buckets;
 	datapacket_t* pkt;
 	
-	if(!port || !port->of_port_state)
+	if(unlikely(!port) || unlikely(!port->of_port_state))
 		return;
 
 	//Perform up_to n_buckets_read
@@ -180,12 +181,12 @@ void* epoll_ioscheduler::process_io(void* grp){
 	/*
 	* Infinite loop unless group is stopped. e.g. all ports detached
 	*/
-	while(iomanager::keep_on_working(pg)){
+	while(likely(iomanager::keep_on_working(pg))){
 
 		//Wait for events or TIMEOUT_MS
 		res = epoll_wait(epfd, events, current_num_of_ports, EPOLL_TIMEOUT_MS);
 		
-		if(res == -1){
+		if(unlikely(res == -1)){
 			ROFL_DEBUG_VERBOSE("[epoll_ioscheduler] epoll returned -1. Continuing...\n");
 			continue;
 		}
@@ -200,12 +201,12 @@ void* epoll_ioscheduler::process_io(void* grp){
 			//std::cerr<<"Active fds.."<<std::endl;
 			//Loop over active fd
 			//FIXME: skip double port process_port_io (both input&output fd signal)
-			for(int i = 0;i<res;i++){
+			for(int i = 0;i<res;++i){
 				epoll_ioscheduler::process_port_io((ioport_provider*)events[i].data.ptr);
 			}	
 		}
 		//Check for updates in the running ports 
-		if( pg->running_hash != current_hash )
+		if( unlikely(pg->running_hash != current_hash) )
 			init_or_update_fds(pg, &epfd, &ev,&events, &current_num_of_ports, &current_hash );
 	}
 

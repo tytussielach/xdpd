@@ -172,9 +172,10 @@ void bufferpool::release_buffer(datapacket_t* buf){
 	unsigned int id = ((datapacketx86*)buf->platform_state)->internal_buffer_id;
 	
 	//Release
-	if(bp->pool_status[id] != BUFFERPOOL_SLOT_IN_USE){
+	if(unlikely(bp->pool_status[id] != BUFFERPOOL_SLOT_IN_USE)){
 		//Attempting to release an unallocated/unavailable buffer
 		ROFL_ERR("Attempting to release an unallocated/unavailable buffer. Ignoring..");
+		assert(0);
 	}else{ 
 		buf->is_replica = false; //Make sure this flag is 0
 		bp->pool_status[id] = BUFFERPOOL_SLOT_AVAILABLE;
