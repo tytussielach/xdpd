@@ -288,7 +288,7 @@ void* x86_background_tasks_routine(void* param)
 
 	//Add netlink	
 	epe_port.data.fd = events_socket;
-	epe_port.events = EPOLLIN | EPOLLET;
+	epe_port.events = EPOLLIN; /*| EPOLLET*/
 	
 	if(epoll_ctl(efd,EPOLL_CTL_ADD,events_socket,&epe_port)==-1){
 		ROFL_ERR("Error in epoll_ctl, errno(%d): %s\n", errno, strerror(errno));
