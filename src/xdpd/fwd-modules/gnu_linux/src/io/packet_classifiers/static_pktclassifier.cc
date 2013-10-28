@@ -1355,11 +1355,13 @@ rofl::fpppoeframe* static_pktclassifier::push_pppoe(uint16_t ether_type){
 	/*
 	 * set default values in pppoe tag
 	 */
-	n_pppoe->set_pppoe_code(0x00);
-	n_pppoe->set_pppoe_sessid(0x0000);
-	n_pppoe->set_pppoe_type(rofl::fpppoeframe::PPPOE_TYPE);
-	n_pppoe->set_pppoe_vers(rofl::fpppoeframe::PPPOE_VERSION);
 
+	if(n_pppoe){
+		n_pppoe->set_pppoe_code(0x00);
+		n_pppoe->set_pppoe_sessid(0x0000);
+		n_pppoe->set_pppoe_type(rofl::fpppoeframe::PPPOE_TYPE);
+		n_pppoe->set_pppoe_vers(rofl::fpppoeframe::PPPOE_VERSION);
+	}
 	return NULL;
 }
 
