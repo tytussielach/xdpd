@@ -706,7 +706,7 @@ of12_translation_utils::of12_map_flow_entry_matches(
 		of1x_match_t *match = of1x_init_ieee80211_direction_match(
 								/*prev*/NULL,
 								/*next*/NULL,
-								oxm_ieee80211_direction.get_ieee80211_direction());
+								oxm_ieee80211_direction.get_direction_value());
 
 		of1x_add_match_to_entry(entry, match);
 	} catch (eOFmatchNotFound& e) {}
@@ -716,8 +716,8 @@ of12_translation_utils::of12_map_flow_entry_matches(
 				ofmatch.get_const_match(OFPXMC_EXPERIMENTER, OFPXMT_OFX_IEEE80211_ADDRESS_1));
 	
 
-		uint64_t maddr = oxm_ieee80211_address_1.get_mac_value();
-		uint64_t mmask = oxm_ieee80211_address_1.get_mac_mask();
+		uint64_t maddr = oxm_ieee80211_address_1.get_mac_value().get_mac();
+		uint64_t mmask = oxm_ieee80211_address_1.get_mac_mask().get_mac();
 
 		of1x_match_t *match = of1x_init_ieee80211_address_1_match(
 								/*prev*/NULL,
@@ -733,8 +733,8 @@ of12_translation_utils::of12_map_flow_entry_matches(
 				ofmatch.get_const_match(OFPXMC_EXPERIMENTER, OFPXMT_OFX_IEEE80211_ADDRESS_2));
 	
 
-		uint64_t maddr = oxm_ieee80211_address_2.get_mac_value();
-		uint64_t mmask = oxm_ieee80211_address_2.get_mac_mask();
+		uint64_t maddr = oxm_ieee80211_address_2.get_mac_value().get_mac();
+		uint64_t mmask = oxm_ieee80211_address_2.get_mac_mask().get_mac();
 
 		of1x_match_t *match = of1x_init_ieee80211_address_2_match(
 								/*prev*/NULL,
@@ -750,8 +750,8 @@ of12_translation_utils::of12_map_flow_entry_matches(
 				ofmatch.get_const_match(OFPXMC_EXPERIMENTER, OFPXMT_OFX_IEEE80211_ADDRESS_3));
 	
 
-		uint64_t maddr = oxm_ieee80211_address_3.get_mac_value();
-		uint64_t mmask = oxm_ieee80211_address_3.get_mac_mask();
+		uint64_t maddr = oxm_ieee80211_address_3.get_mac_value().get_mac();
+		uint64_t mmask = oxm_ieee80211_address_3.get_mac_mask().get_mac();
 
 		of1x_match_t *match = of1x_init_ieee80211_address_3_match(
 								/*prev*/NULL,
