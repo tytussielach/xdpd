@@ -88,6 +88,17 @@ static_pktclassifier::static_pktclassifier(datapacketx86* pkt_ref) :
 		headers[FIRST_GTP_FRAME_POS+i].type = HEADER_TYPE_GTP;
 	}
 
+	//capwap
+	for (i=0;i<MAX_CAPWAP_FRAMES;i++){
+		headers[FIRST_CAPWAP_FRAME_POS+i].frame = new rofl::fcapwapframe(NULL, 0);
+		headers[FIRST_CAPWAP_FRAME_POS+i].type = HEADER_TYPE_CAPWAP;
+	}
+	//ieee80211
+	for (i=0;i<MAX_IEEE80211_FRAMES;i++){
+		headers[FIRST_IEEE80211_FRAME_POS+i].frame = new rofl::fieee80211frame(NULL, 0);
+		headers[FIRST_IEEE80211_FRAME_POS+i].type = HEADER_TYPE_IEEE80211;
+	}
+
 	//Add more here...
 }
 
@@ -368,6 +379,42 @@ rofl::fgtpuframe* static_pktclassifier::gtp(int idx) const
 	return NULL;
 }
 
+rofl::fcapwapframe* static_pktclassifier::capwap(int idx) const
+{
+	unsigned int pos;
+
+	if(idx > (int)MAX_CAPWAP_FRAMES)
+		return NULL;
+
+	if(idx < 0) //Inner most
+		pos = FIRST_CAPWAP_FRAME_POS + num_of_headers[HEADER_TYPE_CAPWAP] - 1;
+	else
+		pos = FIRST_CAPWAP_FRAME_POS + idx;
+
+	//Return the index
+	if(headers[pos].present)
+		return (rofl::fcapwapframe*) headers[pos].frame;
+	return NULL;
+}
+
+rofl::fieee80211frame* static_pktclassifier::ieee80211(int idx) const
+{
+	unsigned int pos;
+
+	if(idx > (int)MAX_IEEE80211_FRAMES)
+		return NULL;
+
+	if(idx < 0) //Inner most
+		pos = FIRST_IEEE80211_FRAME_POS + num_of_headers[HEADER_TYPE_IEEE80211] - 1;
+	else
+		pos = FIRST_IEEE80211_FRAME_POS + idx;
+
+	//Return the index
+	if(headers[pos].present)
+		return (rofl::fieee80211frame*) headers[pos].frame;
+	return NULL;
+}
+
 /*
 * Classify code...
 */
@@ -606,7 +653,47 @@ void static_pktclassifier::parse_ppp(uint8_t *data, size_t datalen){
 	}
 }
 
+void static_pktclassifier::parse_capwap(uint8_t *data,	size_t datalen)
+{
 
+	if (datalen < rofl::fcapwapframe::CAPWAP_HDR_LEN) { return; }
+	
+	//Set frame
+	unsigned int num_of_capwap = num_of_headers[HEADER_TYPE_CAPWAP];
+	headers[FIRST_CAPWAP_FRAME_POS + num_of_capwap].frame->reset(data, datalen);
+	headers[FIRST_CAPWAP_FRAME_POS + num_of_capwap].present = true;
+	num_of_headers[HEADER_TYPE_CAPWAP] = num_of_capwap+1;
+
+	//Get reference
+	rofl::fcapwapframe* capwap = (rofl::fcapwapframe*) headers[FIRST_CAPWAP_FRAME_POS + num_of_capwap].frame; 
+
+	if (capwap->get_capwap_flags() & rofl::fcapwapframe::CAPWAP_F_TYPE_NATIVE) {
+		switch (capwap->get_capwap_wbid()) {
+			case rofl::fcapwapframe::CAPWAP_WB_802_11:
+				//Increment pointers and decrement remaining payload size
+				data += capwap->get_capwap_hlen();
+				datalen -= capwap->get_capwap_hlen(); 
+
+				parse_ieee80211(data, datalen);
+				break;
+
+			default:
+				break;
+		}
+	}
+}
+
+void static_pktclassifier::parse_ieee80211(uint8_t *data,	size_t datalen)
+{
+
+	if (datalen <  rofl::fieee80211frame::IEEE80211_HDR_LEN) { return; }
+	
+	//Set frame
+	unsigned int num_of_ieee80211 = num_of_headers[HEADER_TYPE_IEEE80211];
+	headers[FIRST_IEEE80211_FRAME_POS + num_of_ieee80211].frame->reset(data, datalen);
+	headers[FIRST_IEEE80211_FRAME_POS + num_of_ieee80211].present = true;
+	num_of_headers[HEADER_TYPE_IEEE80211] = num_of_ieee80211+1;
+}
 
 void static_pktclassifier::parse_arpv4(uint8_t *data, size_t datalen){
 
@@ -825,12 +912,14 @@ void static_pktclassifier::parse_udp(uint8_t *data, size_t datalen){
 
 	if (datalen > 0){
 		switch (udp->get_dport()) {
-		case rofl::fgtpuframe::GTPU_UDP_PORT: {
-			parse_gtp(data, datalen);
-		} break;
-		default: {
-			//TODO: something
-		} break;
+			case rofl::fgtpuframe::GTPU_UDP_PORT:
+				parse_gtp(data, datalen);
+				break;
+		case rofl::fcapwapframe::CAPWAP_DATA_PORT:
+				parse_capwap(data, datalen);
+				break;
+			default:
+				break;
 		}
 	}
 }
@@ -1034,7 +1123,7 @@ void static_pktclassifier::pop_pppoe(uint16_t ether_type){
 	
 	rofl::fetherframe* ether_header;
 	
-	// outermost mpls tag, if any, following immediately the initial ethernet header
+	// outermost pppoe tag, if any, following immediately the initial ethernet header
 	if(num_of_headers[HEADER_TYPE_PPPOE] == 0 || !headers[FIRST_PPPOE_FRAME_POS].present)
 		return;
 
@@ -1121,6 +1210,33 @@ void static_pktclassifier::pop_gtp(uint16_t ether_type){
 		ether(-1)->set_dl_type(ether_type);
 	}
 }
+
+void static_pktclassifier::pop_capwap()
+{
+	// outermost capwap tag, if any, following immediately the initial ethernet header
+	if(num_of_headers[HEADER_TYPE_CAPWAP] == 0 || !headers[FIRST_CAPWAP_FRAME_POS].present)
+		return;
+
+
+	pop_header(HEADER_TYPE_CAPWAP, FIRST_CAPWAP_FRAME_POS, FIRST_CAPWAP_FRAME_POS+MAX_CAPWAP_FRAMES);
+
+	//Remove bytes from packet
+	pkt_pop(capwap(0)->soframe(), capwap(0)->get_capwap_length()); //XXX FIXME: this might be wrong!
+	//pkt_pop(/*offset=*/ (unsigned int)0, capwap(0)->payload() - ether(0)->soframe());
+}
+
+void static_pktclassifier::pop_ieee80211()
+{
+	// outermost ieee80211 tag, if any, following immediately the initial ethernet header
+	if(num_of_headers[HEADER_TYPE_IEEE80211] == 0 || !headers[FIRST_IEEE80211_FRAME_POS].present)
+		return;
+
+	pop_header(HEADER_TYPE_IEEE80211, FIRST_IEEE80211_FRAME_POS, FIRST_IEEE80211_FRAME_POS+MAX_IEEE80211_FRAMES);
+	pkt_pop(ieee80211(0)->soframe(), ieee80211(0)->get_ieee80211_length()); //XXX FIXME: this might be wrong!
+	//pkt_pop(/*offset=*/ (unsigned int)0, ieee80211(0)->get_ieee80211_hlen());
+}
+
+
 
 /* PUSH operations
  *
@@ -1551,6 +1667,199 @@ void static_pktclassifier::dump(){
 	rofl::fframe content(pkt->get_buffer(), pkt->get_buffer_length());
 	ROFL_DEBUG("content: %s\n", content.c_str());
 
+}
+
+rofl::fcapwapframe* static_pktclassifier::push_capwap()
+{
+	assert(0);
+	return 0;
+#if 0
+#if 0
+	if (X86_DATAPACKET_BUFFERED_IN_NIC == buffering_status){
+		transfer_to_user_space();
+	}
+#endif
+	if(!is_classified)
+		classify();
+
+	bool is_802_3 = ether(0) ? true : false;
+
+	unsigned int bytes_to_insert =
+		sizeof(struct rofl::fetherframe::eth_hdr_t) +
+		sizeof(struct rofl::fipv4frame::ipv4_hdr_t) +
+		sizeof(struct rofl::fudpframe::udp_hdr_t) +
+		rofl::fcapwapframe::CAPWAP_HDR_LEN;
+
+	/*
+	 * this invalidates ether(0), as it shifts ether(0) to the left
+	 */
+	if (pkt_push((unsigned int)0, bytes_to_insert) == ROFL_FAILURE){
+		// TODO: log error
+		return NULL;
+	}
+
+	classify_reset();
+
+	ROFL_ERR("push_capwap(%p): total bytes %d\n", this, bytes_to_insert);
+
+	uint8_t 	*p_ptr 		= pkt->get_buffer();
+	size_t 		 p_len 		= pkt->get_buffer_length();
+
+	/*
+	 * create new ethernet header
+	 */
+	ROFL_ERR("push_capwap: ether(%p): soframe: %p framelen: %zu\n", this, p_ptr, p_len);
+
+	if (p_len < sizeof(struct rofl::fetherframe::eth_hdr_t)) { return NULL; }
+
+	rofl::fetherframe *n_ether =
+		new rofl::fetherframe(p_ptr, sizeof(struct rofl::fetherframe::eth_hdr_t));
+
+	/*
+	 * initial minimal frame contents
+	 */
+	eth_type = rofl::fipv4frame::IPV4_ETHER;
+	n_ether->set_dl_type(rofl::fipv4frame::IPV4_ETHER);
+
+	frame_append(n_ether);
+	t_frames[ROFL_PKT_CLASSIFIER_ETHER].push_back(n_ether);
+
+	p_ptr += sizeof(struct rofl::fetherframe::eth_hdr_t);
+	p_len -= sizeof(struct rofl::fetherframe::eth_hdr_t);
+
+	/*
+	 * create new IPv4 header
+	 */
+	ROFL_ERR("push_capwap: IPv4(%p): soframe: %p framelen: %zu\n", this, p_ptr, p_len);
+
+	if (p_len < sizeof(struct rofl::fipv4frame::ipv4_hdr_t)) { return NULL; }
+
+	rofl::fipv4frame *n_ipv4 =
+		new rofl::fipv4frame(p_ptr, sizeof(struct rofl::fipv4frame::ipv4_hdr_t));
+
+	/*
+	 * initial minimal frame contents
+	 */
+	n_ipv4->set_ipv4_version(4);
+	n_ipv4->set_ipv4_ihl(5);
+	n_ipv4->set_ipv4_proto(rofl::fudpframe::UDP_IP_PROTO);
+	n_ipv4->set_ipv4_ttl(64);
+	n_ipv4->set_ipv4_length(p_len);
+	n_ipv4->set_DF_bit();
+
+	frame_append(n_ipv4);
+	t_frames[ROFL_PKT_CLASSIFIER_IPV4].push_back(n_ipv4);
+
+	p_ptr += sizeof(struct rofl::fipv4frame::ipv4_hdr_t);
+	p_len -= sizeof(struct rofl::fipv4frame::ipv4_hdr_t);
+
+	/*
+	 * create new UDP header
+	 */
+	ROFL_ERR("push_capwap: UDP(%p): soframe: %p framelen: %zu\n", this, p_ptr, p_len);
+
+	if (p_len < sizeof(struct rofl::fudpframe::udp_hdr_t)) { return NULL; }
+
+	rofl::fudpframe *n_udp =
+		new rofl::fudpframe(p_ptr, sizeof(struct rofl::fudpframe::udp_hdr_t));
+
+	/*
+	 * initial minimal frame contents
+	 */
+	n_udp->set_sport(rofl::fcapwapframe::CAPWAP_DATA_PORT);
+	n_udp->set_length(p_len);
+
+	frame_append(n_udp);
+	t_frames[ROFL_PKT_CLASSIFIER_UDP].push_back(n_udp);
+
+	p_ptr += sizeof(struct rofl::fudpframe::udp_hdr_t);
+	p_len -= sizeof(struct rofl::fudpframe::udp_hdr_t);
+
+	/*
+	 * create new CAPWAP header
+	 */
+	ROFL_ERR("push_capwap: CAPWAP(%p): soframe: %p framelen: %zu\n", this, p_ptr, p_len);
+
+	if (p_len < rofl::fcapwapframe::CAPWAP_HDR_LEN) { return NULL; }
+
+	rofl::fcapwapframe *n_capwap =
+		new rofl::fcapwapframe(p_ptr, p_len);
+
+	frame_append(n_capwap);
+	t_frames[ROFL_PKT_CLASSIFIER_CAPWAP].push_back(n_capwap);
+
+	/*
+	 * set default values in CAPWAP header
+	 */
+	n_capwap->set_capwap_wbid(rofl::fcapwapframe::CAPWAP_WB_802_11);
+	n_capwap->set_capwap_flags(is_802_3 ? rofl::fcapwapframe::CAPWAP_F_TYPE_802_3 : rofl::fcapwapframe::CAPWAP_F_TYPE_NATIVE);
+
+	dump();
+	is_classified = true;
+
+	return n_capwap;
+#endif
+}
+
+rofl::fieee80211frame* static_pktclassifier::push_ieee80211()
+{
+	assert(0);
+	return 0;
+#if 0
+#if 0
+	if (X86_DATAPACKET_BUFFERED_IN_NIC == buffering_status){
+		transfer_to_user_space();
+	}
+#endif
+	if(!is_classified)
+		classify();
+
+	if (!ether(0))
+		return NULL;
+
+	unsigned int bytes_to_insert =
+		rofl::fieee80211frame::IEEE80211_HDR_LEN;
+
+	rofl::cmacaddr old_dl_src = ether(0)->get_dl_src();
+	rofl::cmacaddr old_dl_dst = ether(0)->get_dl_dst();
+
+	/*
+	 * this invalidates ether(0), as it shifts ether(0) to the left
+	 */
+	if (pkt_push((unsigned int)0, bytes_to_insert) == ROFL_FAILURE){
+		// TODO: log error
+		return NULL;
+	}
+
+	classify_reset();
+
+	ROFL_ERR("push_ieee80211(%p): total bytes %d\n", this, bytes_to_insert);
+
+	/*
+	 * create new ethernet header
+	 */
+	ROFL_ERR("push_ieee80211: ether(%p): soframe: %p framelen: %zu\n", this, pkt->get_buffer(), pkt->get_buffer_length());
+
+	/*
+	 * create new IEEE80211 header
+	 */
+	rofl::fieee80211frame *n_ieee80211 =
+		new rofl::fieee80211frame(pkt->get_buffer(), pkt->get_buffer_length());
+	frame_append(n_ieee80211);
+	t_frames[ROFL_PKT_CLASSIFIER_IEEE80211].push_back(n_ieee80211);
+
+	/*
+	 * initial minimal frame contents
+	 */
+	n_ieee80211->set_ieee80211_type(WLAN_FC_TYPE_DATA);
+	n_ieee80211->set_ieee80211_address_1(old_dl_dst);
+	n_ieee80211->set_ieee80211_address_2(old_dl_src);
+
+	dump();
+	is_classified = true;
+
+	return n_ieee80211;
+#endif
 }
 
 

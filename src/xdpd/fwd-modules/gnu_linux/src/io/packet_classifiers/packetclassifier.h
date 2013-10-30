@@ -44,6 +44,8 @@ namespace rofl{
 	class fpppoeframe;
 	class fpppframe;
 	class fgtpuframe;
+	class fcapwapframe;
+	class fieee80211frame;
 }
 
 namespace xdpd {
@@ -82,6 +84,9 @@ public:
 	virtual rofl::fpppoeframe* pppoe(int idx = 0) const=0;
 	virtual rofl::fpppframe* ppp(int idx = 0) const=0;
 	virtual rofl::fgtpuframe* gtp(int idx = 0) const=0;
+	virtual rofl::fcapwapframe* capwap(int idx = 0) const=0;
+	virtual rofl::fieee80211frame* ieee80211(int idx = 0) const=0;
+ 
 
 	/*
 	 * pop operations
@@ -89,14 +94,18 @@ public:
 	virtual void pop_vlan(void)=0;
 	virtual void pop_mpls(uint16_t ether_type)=0;
 	virtual void pop_pppoe(uint16_t ether_type)=0;
-
+	virtual void pop_capwap(void)=0;
+	virtual void pop_ieee80211(void)=0;
+ 
 	/*
 	 * push operations
 	 */
 	virtual rofl::fvlanframe* push_vlan(uint16_t ether_type)=0;
 	virtual rofl::fmplsframe* push_mpls(uint16_t ether_type)=0;
 	virtual rofl::fpppoeframe* push_pppoe(uint16_t ether_type)=0;
-	
+	virtual rofl::fcapwapframe* push_capwap()=0;
+	virtual rofl::fieee80211frame* push_ieee80211()=0;
+
 	/*
 	* dump
 	*/

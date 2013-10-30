@@ -19,9 +19,13 @@
 #include <rofl/common/protocols/fudpframe.h>
 #include <rofl/common/protocols/ftcpframe.h>
 #include <rofl/common/protocols/fsctpframe.h>
+
+//Extensions
 #include <rofl/common/protocols/fpppoeframe.h>
 #include <rofl/common/protocols/fpppframe.h>
 #include <rofl/common/protocols/fgtpuframe.h>
+#include <rofl/common/protocols/fcapwapframe.h>
+#include <rofl/common/protocols/fieee80211frame.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -485,6 +489,72 @@ platform_packet_get_gtp_teid(datapacket_t * const pkt)
 	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
 	if ((NULL == pack) || (NULL == pack->headers->gtp(0))) return 0;
 	return pack->headers->gtp(0)->get_teid();
+}
+
+//CAPWAP 
+uint8_t platform_packet_get_capwap_rid(datapacket_t *const pkt)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->capwap(0))) return rofl::fcapwapframe::CAPWAP_RID_NOT_SET;
+	return pack->headers->capwap(0)->get_capwap_rid();
+}
+uint16_t platform_packet_get_capwap_flags(datapacket_t *const pkt)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->capwap(0))) return 0;
+	return pack->headers->capwap(0)->get_capwap_flags();
+
+}
+uint8_t platform_packet_get_capwap_wbid(datapacket_t *const pkt)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->capwap(0))) return rofl::fcapwapframe::CAPWAP_WB_NOT_SET;
+	return pack->headers->capwap(0)->get_capwap_wbid();
+}
+
+//IEEE80211
+uint16_t platform_packet_get_ieee80211_fc(datapacket_t *const pkt)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->ieee80211(0))) return 0;
+	return pack->headers->ieee80211(0)->get_ieee80211_fc();
+}
+uint8_t platform_packet_get_ieee80211_type(datapacket_t *const pkt)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->ieee80211(0))) return 0;
+	return pack->headers->ieee80211(0)->get_ieee80211_type();
+}
+uint8_t platform_packet_get_ieee80211_subtype(datapacket_t *const pkt)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->ieee80211(0))) return 0;
+	return pack->headers->ieee80211(0)->get_ieee80211_subtype();
+}
+uint8_t platform_packet_get_ieee80211_direction(datapacket_t *const pkt)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->ieee80211(0))) return 0;
+	return pack->headers->ieee80211(0)->get_ieee80211_direction();
+}
+uint64_t platform_packet_get_ieee80211_address_1(datapacket_t *const pkt)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->ieee80211(0))) return 0;
+	return pack->headers->ieee80211(0)->get_ieee80211_address_1().get_mac();
+
+}
+uint64_t platform_packet_get_ieee80211_address_2(datapacket_t *const pkt)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->ieee80211(0))) return 0;
+	return pack->headers->ieee80211(0)->get_ieee80211_address_2().get_mac();
+}
+uint64_t platform_packet_get_ieee80211_address_3(datapacket_t *const pkt)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->ieee80211(0))) return 0;
+	return pack->headers->ieee80211(0)->get_ieee80211_address_3().get_mac();
 }
 
 
@@ -992,6 +1062,105 @@ void platform_packet_pop_gtp(datapacket_t* pkt)
 void platform_packet_push_gtp(datapacket_t* pkt)
 {
 	//TODO: implement
+}
+
+//CAPWAP
+void platform_packet_set_capwap_rid(datapacket_t* pkt, uint8_t rid)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->capwap(0))) return;
+	pack->headers->capwap(0)->set_capwap_rid(rid);
+	pack->udp_recalc_checksum = true;
+}
+void platform_packet_set_capwap_flags(datapacket_t* pkt, uint16_t flags)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->capwap(0))) return;
+	pack->headers->capwap(0)->set_capwap_flags(flags);
+	pack->udp_recalc_checksum = true;
+}
+void platform_packet_set_capwap_wbid(datapacket_t* pkt, uint8_t wbid)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->capwap(0))) return;
+	pack->headers->capwap(0)->set_capwap_wbid(wbid);
+	pack->udp_recalc_checksum = true;
+}
+void platform_packet_pop_capwap(datapacket_t* pkt)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if (NULL == pack) return;
+	pack->headers->pop_capwap();
+}
+void platform_packet_push_capwap(datapacket_t* pkt)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if (NULL == pack) return;
+	pack->headers->push_capwap();
+	pack->ipv4_recalc_checksum = true;
+	pack->udp_recalc_checksum = true;
+}
+
+//IEEE80211
+void platform_packet_set_ieee80211_fc(datapacket_t* pkt, uint16_t fc)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->ieee80211(0))) return;
+	pack->headers->ieee80211(0)->set_ieee80211_fc(fc);
+	pack->udp_recalc_checksum = true;
+}
+void platform_packet_set_ieee80211_type(datapacket_t* pkt, uint8_t type)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->ieee80211(0))) return;
+	pack->headers->ieee80211(0)->set_ieee80211_type(type);
+	pack->udp_recalc_checksum = true;
+}
+void platform_packet_set_ieee80211_subtype(datapacket_t* pkt, uint8_t subtype)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->ieee80211(0))) return;
+	pack->headers->ieee80211(0)->set_ieee80211_subtype(subtype);
+	pack->udp_recalc_checksum = true;
+}
+void platform_packet_set_ieee80211_direction(datapacket_t* pkt, uint8_t direction)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->ieee80211(0))) return;
+	pack->headers->ieee80211(0)->set_ieee80211_direction(direction);
+	pack->udp_recalc_checksum = true;
+}
+void platform_packet_set_ieee80211_address_1(datapacket_t* pkt, uint64_t address_1)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->ieee80211(0))) return;
+	pack->headers->ieee80211(0)->set_ieee80211_address_1(rofl::cmacaddr(address_1));
+	pack->udp_recalc_checksum = true;
+}
+void platform_packet_set_ieee80211_address_2(datapacket_t* pkt, uint64_t address_2)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->ieee80211(0))) return;
+	pack->headers->ieee80211(0)->set_ieee80211_address_2(rofl::cmacaddr(address_2));
+	pack->udp_recalc_checksum = true;
+}
+void platform_packet_set_ieee80211_address_3(datapacket_t* pkt, uint64_t address_3)
+{
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if ((NULL == pack) || (NULL == pack->headers->ieee80211(0))) return;
+	pack->headers->ieee80211(0)->set_ieee80211_address_3(rofl::cmacaddr(address_3));
+	pack->udp_recalc_checksum = true;
+}
+
+void platform_packet_pop_ieee80211(datapacket_t* pkt){
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if (NULL == pack) return;
+	pack->headers->pop_ieee80211();
+}
+void platform_packet_push_ieee80211(datapacket_t* pkt){
+	datapacketx86 *pack = (datapacketx86*)pkt->platform_state;
+	if (NULL == pack) return;
+	pack->headers->push_ieee80211();
 }
 
 

@@ -20,6 +20,8 @@
 #include <rofl/common/protocols/fpppoeframe.h>
 #include <rofl/common/protocols/fpppframe.h>
 #include <rofl/common/protocols/fgtpuframe.h>
+#include <rofl/common/protocols/fcapwapframe.h>
+#include <rofl/common/protocols/fieee80211frame.h>
 
 #include "packetclassifier.h"
 
@@ -74,6 +76,9 @@ public:
 	virtual rofl::fpppoeframe* 	pppoe(int idx = 0)	const;
 	virtual rofl::fpppframe* 	ppp(int idx = 0) 	const;
 	virtual rofl::fgtpuframe*	gtp(int idx = 0)	const;
+	virtual rofl::fcapwapframe*	capwap(int idx = 0)	const;
+	virtual rofl::fieee80211frame*	ieee80211(int idx = 0)	const;
+ 
 
 	/*
 	 * pop operations
@@ -82,6 +87,9 @@ public:
 	virtual void pop_mpls(uint16_t ether_type);
 	virtual void pop_pppoe(uint16_t ether_type);
 	virtual void pop_gtp(uint16_t ether_type);
+	virtual void pop_capwap(void);
+	virtual void pop_ieee80211(void);
+ 
 
 	/*
 	 * push operations
@@ -90,6 +98,9 @@ public:
 	virtual rofl::fmplsframe* 	push_mpls(uint16_t ether_type);
 	virtual rofl::fpppoeframe* 	push_pppoe(uint16_t ether_type);
 	virtual rofl::fgtpuframe*	push_gtp(uint16_t ether_type);
+	virtual rofl::fcapwapframe*	push_capwap();
+	virtual rofl::fieee80211frame*	push_ieee80211();
+
 
 	/*
 	* dump
@@ -115,40 +126,44 @@ protected:
 	
 	//Header type
 	enum header_type{
-		HEADER_TYPE_ETHER = 0,	
-		HEADER_TYPE_VLAN = 1,	
-		HEADER_TYPE_MPLS = 2,	
-		HEADER_TYPE_ARPV4 = 3,	
-		HEADER_TYPE_IPV4 = 4,	
-		HEADER_TYPE_ICMPV4 = 5,
-		HEADER_TYPE_IPV6 = 6,	
-		HEADER_TYPE_ICMPV6 = 7,	
-		HEADER_TYPE_UDP = 8,	
-		HEADER_TYPE_TCP = 9,	
-		HEADER_TYPE_SCTP = 10,	
-		HEADER_TYPE_PPPOE = 11,	
-		HEADER_TYPE_PPP = 12,	
-		HEADER_TYPE_GTP = 13,
+		HEADER_TYPE_ETHER	= 0,	
+		HEADER_TYPE_VLAN	= 1,	
+		HEADER_TYPE_MPLS	= 2,	
+		HEADER_TYPE_ARPV4	= 3,	
+		HEADER_TYPE_IPV4	= 4,	
+		HEADER_TYPE_ICMPV4	= 5,
+		HEADER_TYPE_IPV6	= 6,	
+		HEADER_TYPE_ICMPV6	= 7,	
+		HEADER_TYPE_UDP		= 8,	
+		HEADER_TYPE_TCP		= 9,	
+		HEADER_TYPE_SCTP	= 10,	
+		HEADER_TYPE_PPPOE	= 11,	
+		HEADER_TYPE_PPP		= 12,	
+		HEADER_TYPE_GTP		= 13,
+		HEADER_TYPE_CAPWAP	= 14,
+		HEADER_TYPE_IEEE80211	= 15,
 
 		//Must be the last one
 		HEADER_TYPE_MAX
 	};
 
 	//Maximum header occurrences per type
-	static const unsigned int MAX_ETHER_FRAMES = 2;
-	static const unsigned int MAX_VLAN_FRAMES = 4;
-	static const unsigned int MAX_MPLS_FRAMES = 16;
-	static const unsigned int MAX_ARPV4_FRAMES = 1;
-	static const unsigned int MAX_IPV4_FRAMES = 2;
-	static const unsigned int MAX_ICMPV4_FRAMES = 2;
-	static const unsigned int MAX_IPV6_FRAMES = 2;
-	static const unsigned int MAX_ICMPV6_FRAMES = 2;
-	static const unsigned int MAX_UDP_FRAMES = 2;
-	static const unsigned int MAX_TCP_FRAMES = 2;
-	static const unsigned int MAX_SCTP_FRAMES = 2;
-	static const unsigned int MAX_PPPOE_FRAMES = 1;
-	static const unsigned int MAX_PPP_FRAMES = 1;
-	static const unsigned int MAX_GTP_FRAMES = 1;
+	static const unsigned int MAX_ETHER_FRAMES	= 2;
+	static const unsigned int MAX_VLAN_FRAMES	= 4;
+	static const unsigned int MAX_MPLS_FRAMES	= 16;
+	static const unsigned int MAX_ARPV4_FRAMES	= 1;
+	static const unsigned int MAX_IPV4_FRAMES	= 2;
+	static const unsigned int MAX_ICMPV4_FRAMES	= 2;
+	static const unsigned int MAX_IPV6_FRAMES	= 2;
+	static const unsigned int MAX_ICMPV6_FRAMES	= 2;
+	static const unsigned int MAX_UDP_FRAMES	= 2;
+	static const unsigned int MAX_TCP_FRAMES	= 2;
+	static const unsigned int MAX_SCTP_FRAMES	= 2;
+	static const unsigned int MAX_PPPOE_FRAMES	= 1;
+	static const unsigned int MAX_PPP_FRAMES	= 1;
+	static const unsigned int MAX_GTP_FRAMES	= 1;
+	static const unsigned int MAX_CAPWAP_FRAMES	= 1;
+	static const unsigned int MAX_IEEE80211_FRAMES	= 1;
 
 	//Total maximum header occurrences
 	static const unsigned int MAX_HEADERS = MAX_ETHER_FRAMES +
@@ -164,7 +179,9 @@ protected:
 							MAX_SCTP_FRAMES +
 							MAX_PPPOE_FRAMES + 
 							MAX_PPP_FRAMES +
-							MAX_GTP_FRAMES;
+							MAX_GTP_FRAMES +
+							MAX_CAPWAP_FRAMES +
+							MAX_IEEE80211_FRAMES;
 
 
 	//Relative positions within the array;
@@ -182,6 +199,8 @@ protected:
 	static const unsigned int FIRST_PPPOE_FRAME_POS = FIRST_SCTP_FRAME_POS+MAX_SCTP_FRAMES;
 	static const unsigned int FIRST_PPP_FRAME_POS = FIRST_PPPOE_FRAME_POS+MAX_PPPOE_FRAMES;
 	static const unsigned int FIRST_GTP_FRAME_POS = FIRST_PPP_FRAME_POS+MAX_PPP_FRAMES;
+	static const unsigned int FIRST_CAPWAP_FRAME_POS = FIRST_GTP_FRAME_POS+MAX_GTP_FRAMES;
+	static const unsigned int FIRST_IEEE80211_FRAME_POS = FIRST_CAPWAP_FRAME_POS+MAX_CAPWAP_FRAMES;
 
 	//Just to be on the safe side of life
 	//assert( (FIRST_PPP_FRAME_POS + MAX_PPP_FRAMES) == MAX_HEADERS);
@@ -192,7 +211,6 @@ protected:
  
 	//Header container
 	typedef struct header_container{
-
 		//Presence of header
 		bool present;
 		
@@ -213,7 +231,7 @@ protected:
 	void frame_push(rofl::fframe *frame);
 	void frame_pop(rofl::fframe *frame);
 
-	void parse_ether	(uint8_t *data, size_t datalen);
+	void parse_ether(uint8_t *data, size_t datalen);
 	void parse_vlan(uint8_t *data, size_t datalen);
 	void parse_mpls(uint8_t *data, size_t datalen);
 	void parse_pppoe(uint8_t *data, size_t datalen);
@@ -227,6 +245,8 @@ protected:
 	void parse_tcp(uint8_t *data, size_t datalen);
 	void parse_sctp	(uint8_t *data, size_t datalen);
 	void parse_gtp(uint8_t *data, size_t datalen);
+	void parse_capwap(uint8_t *data, size_t datalen);
+	void parse_ieee80211(uint8_t *data, size_t datalen);
 
 	//Insert/pop frame
 	void pop_header(enum header_type type, unsigned int start, unsigned int end);
