@@ -22,7 +22,6 @@
 
 #include "ports/ioport.h" 
 #include "ports/mmap/ioport_mmap.h" 
-#include "ports/mmap/ioport_mmapv2.h" 
 #include "ports/netmap/ioport_netmap.h" 
 #include "ports/vlink/ioport_vlink.h" 
 
@@ -256,7 +255,7 @@ static switch_port_t* fill_port(int sock, struct ifaddrs* ifa){
 		io_port = new ioport_mmapv2(port);
 	}
 #else
-	ioport* io_port = new ioport_mmapv2(port);
+	ioport* io_port = new ioport_mmap(port);
 #endif
 
 	port->platform_port_state = (platform_port_state_t*)io_port;
