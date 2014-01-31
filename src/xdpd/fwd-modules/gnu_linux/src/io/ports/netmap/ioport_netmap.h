@@ -48,7 +48,7 @@ public:
 
 	//Get read&write fds. Return -1 if do not exist
 	inline virtual int get_read_fd(void){return fd;}; 
-	inline virtual int get_write_fd(void){return notify_pipe[READ];};
+	inline virtual int get_write_fd(void){return -1;};
 
 	//Get buffer status
 	//virtual circular_queue_state_t get_input_queue_state(void); 
@@ -62,7 +62,6 @@ public:
 
 protected:
 	virtual void flush_ring();
-	virtual void empty_pipe();
 	//Queues
 	static const unsigned int MMAP_DEFAULT_NUM_OF_QUEUES=8; 
 
@@ -75,34 +74,6 @@ protected:
 	//pollfds
 	int fd;
 
-	int notify_pipe[2];
-	int deferred_drain;
-	char draining_buffer[IO_IFACE_RING_SLOTS];
-
-	//Pipe extremes
-	static const unsigned int READ=0;
-	static const unsigned int WRITE=1;
-
-	static inline void
-	pkt_copy(const void *_src, void *_dst, int l)
-	{
-		const uint64_t *src = (const uint64_t *)_src;
-		uint64_t *dst = (uint64_t *)_dst;
-		if (unlikely(l >= 1024)) {
-			bcopy(src, dst, l);
-			return;
-		}
-		for (; l>0; l-=64) {
-			*dst++ = *src++;
-			*dst++ = *src++;
-			*dst++ = *src++;
-			*dst++ = *src++;
-			*dst++ = *src++;
-			*dst++ = *src++;
-			*dst++ = *src++;
-			*dst++ = *src++;
-		}
-	}
 };
 
 }// namespace xdpd::gnu_linux 
