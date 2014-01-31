@@ -39,6 +39,9 @@ ioport_netmap::ioport_netmap(switch_port_t* of_ps, unsigned int num_queues):iopo
 			req.nr_rx_rings, req.nr_rx_slots);
 
 	num_of_queues=req.nr_tx_rings;
+	for(unsigned int i=0;i<num_of_queues;i++) {
+		slotsize[i]=req.nr_tx_slots;
+	}
 
 	close(fd);
 	

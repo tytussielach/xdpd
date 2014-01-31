@@ -36,7 +36,7 @@ class ioport_netmap : public ioport{
 
 public:
 	//ioport_netmap
-	ioport_netmap(switch_port_t* of_ps, unsigned int num_queues=MMAP_DEFAULT_NUM_OF_QUEUES);
+	ioport_netmap(switch_port_t* of_ps, unsigned int num_queues=NETMAP_DEFAULT_NUM_OF_QUEUES);
 	virtual ~ioport_netmap();
 	 
 	//Enque packet for transmission (blocking)
@@ -49,6 +49,10 @@ public:
 	//Get read&write fds. Return -1 if do not exist
 	inline virtual int get_read_fd(void){return fd;}; 
 	inline virtual int get_write_fd(void){return -1;};
+
+	inline virtual unsigned int get_queue_size(unsigned int id){
+		return slotsize[id];
+	}
 
 	//Get buffer status
 	//virtual circular_queue_state_t get_input_queue_state(void); 
@@ -63,7 +67,7 @@ public:
 protected:
 	virtual void flush_ring();
 	//Queues
-	static const unsigned int MMAP_DEFAULT_NUM_OF_QUEUES=8; 
+	static const unsigned int NETMAP_DEFAULT_NUM_OF_QUEUES=8; 
 
 	//netmap interface handler
 	struct netmap_if *nifp;
@@ -73,6 +77,8 @@ protected:
 	uint64_t memsize;
 	//pollfds
 	int fd;
+
+	int slotsize[NETMAP_DEFAULT_NUM_OF_QUEUES];
 
 };
 
