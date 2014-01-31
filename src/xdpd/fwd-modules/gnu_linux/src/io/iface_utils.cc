@@ -261,8 +261,10 @@ static switch_port_t* fill_port(int sock, struct ifaddrs* ifa){
 
 	port->platform_port_state = (platform_port_state_t*)io_port;
 	
+//#ifndef IO_USE_NETMAP
 	//Fill port queues
 	fill_port_queues(port, (ioport*)port->platform_port_state);
+//#endif
 	
 	return port;
 }

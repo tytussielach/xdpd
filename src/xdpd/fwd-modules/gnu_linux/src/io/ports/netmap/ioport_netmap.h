@@ -50,9 +50,9 @@ public:
 	inline virtual int get_read_fd(void){return fd;}; 
 	inline virtual int get_write_fd(void){return -1;};
 
-	inline virtual unsigned int get_queue_size(unsigned int id){
-		return slotsize[id];
-	}
+	inline unsigned int get_queue_size(unsigned int id){
+		return (id < num_of_queues)? slotsize[id]: 0;
+	};
 
 	//Get buffer status
 	//virtual circular_queue_state_t get_input_queue_state(void); 
