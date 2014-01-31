@@ -153,7 +153,7 @@ datapacket_t* ioport_netmap::read(){
 
 	buf = NETMAP_BUF(ring, slot->buf_idx);
 
-	pkt_x86->init((uint8_t*)buf, slot->len, of_port_state->attached_sw, of_port_state->of_port_num,0,false,false);
+	pkt_x86->init((uint8_t*)buf, slot->len, of_port_state->attached_sw, of_port_state->of_port_num,0,true,false);
 
 	//ROFL_DEBUG_VERBOSE("Got pkt %d of size %d ==> %p\n", slot->buf_idx, slot->len, pkt_x86->get_buffer());
 
