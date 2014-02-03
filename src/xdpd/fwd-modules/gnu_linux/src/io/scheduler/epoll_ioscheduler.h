@@ -197,7 +197,7 @@ void* epoll_ioscheduler::process_io(void* grp){
 
 	assert(pg->type == ((is_rx)? PG_RX:PG_TX));
 
-	ROFL_DEBUG("[epoll_ioscheduler] Launching I/O RX thread on process id: %u(%u) for group %u\n", is_rx? "RX":"TX", syscall(SYS_gettid), pthread_self(), pg->id);
+	//ROFL_DEBUG("[epoll_ioscheduler] Launching I/O RX thread on process id: %u(%u) for group %u\n", is_rx? "RX":"TX", syscall(SYS_gettid), pthread_self(), pg->id);
 	ROFL_DEBUG_VERBOSE("[epoll_ioscheduler] Initialization of epoll completed in thread:%d\n",pthread_self());
 
 	//Set scheduling and priority

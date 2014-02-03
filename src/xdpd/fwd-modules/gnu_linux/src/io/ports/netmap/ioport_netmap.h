@@ -19,6 +19,9 @@
 #include <net/netmap.h>
 #include <net/netmap_user.h>
 
+#include <linux/ethtool.h>
+#include <linux/sockios.h>
+
 #include <sys/poll.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -71,6 +74,10 @@ protected:
 
 	//netmap interface handler
 	struct netmap_if *nifp;
+
+	int nr_tx_rings;
+	int nr_rx_rings;
+
 	//netmap mmap area
 	static struct netmap_d *mem;
 	// size
