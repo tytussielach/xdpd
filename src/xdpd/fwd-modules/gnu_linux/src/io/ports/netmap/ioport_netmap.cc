@@ -81,9 +81,6 @@ void ioport_netmap::enqueue_packet(datapacket_t* pkt, unsigned int q_id){
 
 	ROFL_DEBUG("Sending %p buf_idx:%d\n", pkt_x86->get_buffer(), slot->buf_idx);
 
-	//ROFL_INFO("Sent pkt id:%p of size %d\n", pkt_x86, slot->len);
-	//ROFL_INFO("Sent pkt id:%p of size %d\n", pkt_x86, slot->len);
-
 	//ROFL_DEBUG_VERBOSE("Getting buffer with id:%d. Putting it into the wire\n", pkt_x86->buffer_id);
 
 	//Free buffer
@@ -150,7 +147,7 @@ datapacket_t* ioport_netmap::read(){
 
 		pkt_x86->init((uint8_t*)buf, slot->len, of_port_state->attached_sw, of_port_state->of_port_num,0,true,false);
 
-		ROFL_DEBUG_VERBOSE("Filled buffer with id:%d. Sending to process.\n", slot->buf_idx);
+		ROFL_DEBUG_VERBOSE("[%s@%d] Filled buffer with id:%d. Sending to process.\n", of_port_state->name, i, slot->buf_idx);
 
 		ring->cur = NETMAP_RING_NEXT(ring, cur);
 		ring->avail-- ;
@@ -165,7 +162,7 @@ datapacket_t* ioport_netmap::read(){
 }
 
 unsigned int ioport_netmap::write(unsigned int q_id, unsigned int num_of_buckets){
-	return 0;
+	return num_of_buckets;
 }
 
 rofl_result_t ioport_netmap::disable(){
@@ -249,10 +246,10 @@ rofl_result_t ioport_netmap::enable(){
 		ifr.ifr_flags |= IFF_PROMISC;
 		ret=ioctl(sd, SIOCSIFFLAGS, &ifr);
 	}
-	ret = ioctl(sd, SIOCETHTOOL, ETHTOOL_SGSO);
+	/*ret = ioctl(sd, SIOCETHTOOL, ETHTOOL_SGSO);
 	ret = ioctl(sd, SIOCETHTOOL, ETHTOOL_STSO);
 	ret = ioctl(sd, SIOCETHTOOL, ETHTOOL_SRXCSUM);
-	ret = ioctl(sd, SIOCETHTOOL, ETHTOOL_STXCSUM);
+	ret = ioctl(sd, SIOCETHTOOL, ETHTOOL_STXCSUM);*/
 
 	nifp = NETMAP_IF(mem, req.nr_offset);
 	
