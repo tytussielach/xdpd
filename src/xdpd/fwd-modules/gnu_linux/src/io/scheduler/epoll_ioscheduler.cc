@@ -383,6 +383,7 @@ void* epoll_ioscheduler::process_io_tx(void* grp){
 		sem_ret = sem_timedwait(sem, &abs_timeout);
 
 		if(unlikely(sem_ret < 0)){
+			continue;
 			//FIXME: trace
 		}
 		
@@ -400,8 +401,13 @@ void* epoll_ioscheduler::process_io_tx(void* grp){
 		//Drain credits for the (already) TX'd packets (tx_packets - 1(inital sem_wait))
 		if( likely(tx_packets > 0) ){
 			ROFL_DEBUG_VERBOSE("Draining :%u\n", tx_packets-1);
-			for(tx_packets--;tx_packets;tx_packets--)
-				sem_trywait(sem);	
+			for(tx_packets--;tx_packets>0;tx_packets--){
+							int ret_wait = sem_wait(sem);
+							if( ret_wait < 0){
+									fprintf(stderr,"Wait failed\n");
+									exit(0);
+							}
+					}
 		}
 
 		//Check for updates in the running ports 
