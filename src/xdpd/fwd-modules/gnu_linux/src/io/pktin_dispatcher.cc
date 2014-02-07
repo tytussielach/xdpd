@@ -1,5 +1,7 @@
 #include "pktin_dispatcher.h"
 
+#include <unistd.h>
+#include <fcntl.h>
 #include <rofl/datapath/pipeline/physical_switch.h>
 #include <rofl/datapath/pipeline/openflow/openflow1x/of1x_async_events_hooks.h>
 #include <rofl/datapath/pipeline/openflow/openflow1x/of1x_switch.h>
@@ -60,11 +62,11 @@ static inline void process_sw_of1x_packet_ins(of1x_switch_t* sw){
 
 		//Normalize size
 		pkt_size = pkt_x86->get_buffer_length();
-		if(pkt_size > sw->pipeline->miss_send_len)
-			pkt_size = sw->pipeline->miss_send_len;
+		if(pkt_size > sw->pipeline.miss_send_len)
+			pkt_size = sw->pipeline.miss_send_len;
 			
 		//Process packet in
-        	rv = cmm_process_of1x_packet_in(sw, 
+        	rv = cmm_process_of1x_packet_in(sw->dpid, 
 						pkt_x86->pktin_table_id, 	
 						pkt_x86->pktin_reason, 	
 						pkt_x86->in_port, 
@@ -72,8 +74,8 @@ static inline void process_sw_of1x_packet_ins(of1x_switch_t* sw){
 						pkt_x86->get_buffer(), 
 						pkt_size,
 						pkt_x86->get_buffer_length(),
-						*((of1x_packet_matches_t*)&pkt->matches)
-				);
+						&pkt->matches
+						);
 
 		if( unlikely(rv != AFA_SUCCESS) ){
 			ROFL_DEBUG("PKT_IN for packet(%p) could not be sent to sw:%s controller. Dropping..\n",pkt,sw->name);

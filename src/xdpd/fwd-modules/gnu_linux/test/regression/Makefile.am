@@ -4,7 +4,7 @@ SUBDIRS = io
 
 if C_CLASSIFIER
 CLASSIFIER_SRC=$(top_srcdir)/src/io/packet_classifiers/c_pktclassifier/c_pktclassifier.c \
-		$(top_srcdir)/src/io/packet_classifiers/push_pop_operations.cc
+		$(top_srcdir)/src/io/packet_classifiers/packet_operations.cc
 else
 CLASSIFIER_SRC=$(top_srcdir)/src/io/packet_classifiers/cpp_pktclassifier/cpp_pktclassifier.cc \
 		$(top_srcdir)/src/io/packet_classifiers/cpp_pktclassifier/packetclassifier.cc \
@@ -33,6 +33,7 @@ SHARED_SRC=\
 	$(top_srcdir)/src/pipeline-imp/memory.c \
 	$(top_srcdir)/src/pipeline-imp/pthread_lock.c \
 	$(top_srcdir)/src/pipeline-imp/pthread_atomic_operations.c \
+	$(top_srcdir)/src/pipeline-imp/timing.c \
 	$(top_srcdir)/src/io/pktin_dispatcher.cc \
 	$(top_srcdir)/src/io/iomanager.cc \
 	$(top_srcdir)/src/io/bufferpool.cc \
