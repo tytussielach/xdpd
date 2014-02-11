@@ -51,7 +51,7 @@ public:
 
 	//Get read&write fds. Return -1 if do not exist
 	inline virtual int get_read_fd(void){return fd;}; 
-	inline virtual int get_write_fd(void){return -1;};
+	inline virtual int get_write_fd(void){return notify_pipe[READ];};
 
 	inline unsigned int get_queue_size(unsigned int id){
 		return (id < num_of_queues)? slotsize[id]: 0;
@@ -69,6 +69,7 @@ public:
 
 protected:
 	virtual void flush_ring();
+	virtual void empty_pipe();
 	//Queues
 	static const unsigned int NETMAP_DEFAULT_NUM_OF_QUEUES=8; 
 
@@ -86,6 +87,14 @@ protected:
 	int fd;
 
 	int slotsize[NETMAP_DEFAULT_NUM_OF_QUEUES];
+
+	int notify_pipe[2];
+	int deferred_drain;
+	char draining_buffer[IO_IFACE_RING_SLOTS];
+
+	//Pipe extremes
+	static const unsigned int READ=0;
+	static const unsigned int WRITE=1;
 
 };
 
