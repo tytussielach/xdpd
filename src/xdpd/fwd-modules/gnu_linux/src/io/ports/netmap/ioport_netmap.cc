@@ -150,7 +150,7 @@ datapacket_t* ioport_netmap::read(){
 		}
 
 		//Allocate free buffer
-		pkt = bufferpool::get_free_buffer(false);
+		pkt = bufferpool::get_free_buffer_nonblocking();
 		if(!pkt) {
 			ROFL_DEBUG("Buffer Problem\n");
 			assert(0);
