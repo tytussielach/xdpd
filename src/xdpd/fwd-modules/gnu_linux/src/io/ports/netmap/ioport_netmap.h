@@ -79,6 +79,9 @@ protected:
 	int nr_tx_rings;
 	int nr_rx_rings;
 
+	int nr_rx_current;
+	int nr_tx_current;
+
 	//netmap mmap area
 	static struct netmap_d *mem;
 	// size

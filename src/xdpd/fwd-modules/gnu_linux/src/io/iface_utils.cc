@@ -253,7 +253,7 @@ static switch_port_t* fill_port(int sock, struct ifaddrs* ifa){
 		io_port = new ioport_netmap(port);
 	} catch(char const *str) {
 		ROFL_INFO("Problem: %s\n",str);
-		io_port = new ioport_mmapv2(port);
+		io_port = new ioport_mmap(port);
 	}
 #else
 	ioport* io_port = new ioport_mmap(port);

@@ -70,8 +70,7 @@ ioport_netmap::~ioport_netmap(){
 }
 
 //Read and write methods over port
-void ioport_netmap::enqueue_packet(datapacket_t* pkt, unsigned int q_id){
-	datapacketx86* pkt_x86;
+void ioport_netmap::enqueue_packet(datapacket_t* pkt, unsigned int q_id) {
 	size_t ret;
 	//Whatever
 	const char c='a';
@@ -82,16 +81,17 @@ void ioport_netmap::enqueue_packet(datapacket_t* pkt, unsigned int q_id){
 		return;
 	}
 	//Put in the queue
-	if(output_queues[q_id].non_blocking_write(pkt) != ROFL_SUCCESS ) {
+	if(output_queues[q_id]->non_blocking_write(pkt) != ROFL_SUCCESS ) {
 		ROFL_DEBUG("Queue problem\n");
 		bufferpool::release_buffer(pkt);
 	}
 
-	ROFL_DEBUG_VERBOSE("[mmap:%s] Packet(%p) enqueued, buffer size: %d\n",  of_port_state->name, pkt, output_queues[q_id].size());
+	ROFL_DEBUG_VERBOSE("[mmap:%s] Packet(%p) enqueued, buffer size: %d\n",  of_port_state->name, pkt, output_queues[q_id]->size());
 	//TODO: make it happen only if thread is really sleeping...
 	ret = ::write(notify_pipe[WRITE],&c,sizeof(c));
 	if( unlikely(ret == 0) )
 		ROFL_DEBUG("Can't write into notify_pipe");
+	
 	return;
 }
 
@@ -137,10 +137,15 @@ datapacket_t* ioport_netmap::read(){
 	unsigned int cur;
 	char *buf;
 
-	for(int i=0; i< nr_rx_rings; i++) {
-		struct netmap_ring *ring = NETMAP_RXRING(nifp,i);
+	// Check for every ring start from where we left and read until it ends
+	for(int i=0; i<nr_rx_rings ; i++) {
+		struct netmap_ring *ring = NETMAP_RXRING(nifp,nr_rx_current);
 
-		if (ring->avail <= 0) {
+		if (ring->avail == 0) {
+			nr_rx_current++;
+			if (nr_rx_current >= nr_rx_rings)
+				nr_rx_current = 0;
+			ROFL_DEBUG("[%s@%d] is empty.\n", of_port_state->name, ring->avail);
 			continue;
 		}
 
@@ -159,17 +164,15 @@ datapacket_t* ioport_netmap::read(){
 
 		pkt_x86->init((uint8_t*)buf, slot->len, of_port_state->attached_sw, of_port_state->of_port_num,0,true,false);
 
-		ROFL_DEBUG_VERBOSE("[%s@%d] Filled buffer with id:%d. Sending to process.\n", of_port_state->name, i, slot->buf_idx);
+		ROFL_DEBUG_VERBOSE("[%s@%d] Filled buffer with id:%d. Sending to process.\n", of_port_state->name, cur, slot->buf_idx);
 
 		ring->cur = NETMAP_RING_NEXT(ring, cur);
 		ring->avail-- ;
 		
-		if(ioctl(fd,NIOCRXSYNC, NULL) == -1)
-			ROFL_DEBUG_VERBOSE("Netmap sync problem\n");
-	
+		/*if(ioctl(fd,NIOCRXSYNC, NULL) == -1)
+			ROFL_DEBUG_VERBOSE("Netmap sync problem\n");*/
 		return pkt;
 	}
-	
 	return NULL;	
 }
 
@@ -185,7 +188,9 @@ unsigned int ioport_netmap::write(unsigned int q_id, unsigned int num_of_buckets
 	}
 
 	struct netmap_ring *ring;
-	ring = NETMAP_TXRING(nifp, 0);
+	ring = NETMAP_TXRING(nifp, nr_tx_current++);
+	if(nr_tx_current >= nr_tx_rings)
+		nr_tx_current = 0;
 
 	// Decrease the packet count
 	if ( ring->avail < num_of_buckets)
@@ -197,13 +202,13 @@ unsigned int ioport_netmap::write(unsigned int q_id, unsigned int num_of_buckets
 	for(cur = ring->cur, i=0;i<count;i++){
 
 		// It shouldn't happen but let's make sure.
-		if(output_queues[q_id].is_empty()) {
+		if(output_queues[q_id]->is_empty()) {
 			if(deferred_drain > 0)
 				empty_pipe();
 			break;
 		}
 		//Pick buffer
-		pkt = output_queues[q_id].non_blocking_read();
+		pkt = output_queues[q_id]->non_blocking_read();
 		if(!pkt) {
 			ROFL_DEBUG("pkt is null\n");
 			break;
@@ -212,21 +217,25 @@ unsigned int ioport_netmap::write(unsigned int q_id, unsigned int num_of_buckets
 		pkt_x86 = (datapacketx86*)pkt->platform_state;
 		//(void)pkt_x86;
 
+	
 		struct netmap_slot *slot = &ring->slot[cur];
-		//char *buf;
-		//buf = NETMAP_BUF(ring, slot->buf_idx);
-		//pkt_copy(pkt_x86->get_buffer(),buf,pkt_x86->get_buffer_length());
 		slot->flags=0;
-		//slot->flags |= NS_INDIRECT;
-		//slot->ptr = (uint64_t)(pkt_x86->get_buffer());
-		slot->buf_idx = NETMAP_BUF_IDX(ring, (char *) pkt_x86->get_buffer());
-		slot->flags |= NS_BUF_CHANGED;	
 		slot->len = pkt_x86->get_buffer_length();
+
+		//pkt_copy(pkt_x86->get_buffer(),buf,pkt_x86->get_buffer_length());
+		slot->flags |= NS_BUF_CHANGED;
+		slot->buf_idx = NETMAP_BUF_IDX(ring, (char *) pkt_x86->get_buffer());
+
+#if 0
+		slot->flags |= NS_INDIRECT;
+		slot->ptr = (uint64_t) pkt_x86->get_buffer();
+
+		char *buf = NETMAP_BUF(ring,slot->buf_idx);
+		memcpy(buf, pkt_x86->get_buffer(), slot->len);
+#endif
 
 		ROFL_DEBUG("Sending %p buf_idx:%d\n", pkt_x86->get_buffer(), slot->buf_idx);
 
-		//ROFL_INFO("Sent pkt id:%p of size %d\n", pkt_x86, slot->len);
-		//ROFL_INFO("Sent pkt id:%p of size %d\n", pkt_x86, slot->len);
 		cur = NETMAP_RING_NEXT(ring, cur);
 
 		//ROFL_DEBUG_VERBOSE("Getting buffer with id:%d. Putting it into the wire\n", pkt_x86->buffer_id);
@@ -245,6 +254,7 @@ unsigned int ioport_netmap::write(unsigned int q_id, unsigned int num_of_buckets
 	ret = ioctl(fd,NIOCTXSYNC, NULL);
 	if(unlikely(ret == -1))
 		ROFL_DEBUG_VERBOSE("Netmap sync problem\n");
+	
 	return num_of_buckets-i;
 }
 
@@ -302,7 +312,7 @@ rofl_result_t ioport_netmap::enable(){
 	bzero(&req,sizeof(nmreq));
 	strcpy(req.nr_name, of_port_state->name);
 	req.nr_version = NETMAP_API;
-	//req.nr_ringid = NETMAP_HW_RING;
+	//req.nr_ringid = NETMAP_HW_RING+1;
 	req.nr_ringid |= NETMAP_NO_TX_POLL;
 	
 	ret = ioctl(fd, NIOCREGIF, &req);
@@ -326,18 +336,23 @@ rofl_result_t ioport_netmap::enable(){
 	ret = ioctl(sd, SIOCGIFFLAGS, &ifr);
 	if((ifr.ifr_flags & IFF_UP) == 0) {
 		ifr.ifr_flags |= IFF_UP;
-		ifr.ifr_flags |= IFF_PROMISC;
-		ret=ioctl(sd, SIOCSIFFLAGS, &ifr);
 	}
-	/*ret = ioctl(sd, SIOCETHTOOL, ETHTOOL_SGSO);
+	if((ifr.ifr_flags & IFF_PROMISC) == 0) {
+		ifr.ifr_flags |= IFF_PROMISC;
+	}
+	ret=ioctl(sd, SIOCSIFFLAGS, &ifr);
+
+	ret = ioctl(sd, SIOCETHTOOL, ETHTOOL_SGSO);
 	ret = ioctl(sd, SIOCETHTOOL, ETHTOOL_STSO);
 	ret = ioctl(sd, SIOCETHTOOL, ETHTOOL_SRXCSUM);
-	ret = ioctl(sd, SIOCETHTOOL, ETHTOOL_STXCSUM);*/
+	ret = ioctl(sd, SIOCETHTOOL, ETHTOOL_STXCSUM);
 
 	nifp = NETMAP_IF(mem, req.nr_offset);
 	
 	of_port_state->up = true;
-	
+
+	nr_rx_current=0;
+	nr_tx_current=0;
 	flush_ring();
 	close(sd);
 	return ROFL_SUCCESS;
