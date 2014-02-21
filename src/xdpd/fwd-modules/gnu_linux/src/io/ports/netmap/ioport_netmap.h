@@ -53,22 +53,17 @@ public:
 	inline virtual int get_read_fd(void){return fd;}; 
 	inline virtual int get_write_fd(void){return notify_pipe[READ];};
 
-	inline unsigned int get_queue_size(unsigned int id){
-		return (id < num_of_queues)? slotsize[id]: 0;
-	};
-
 	//Get buffer status
 	//virtual circular_queue_state_t get_input_queue_state(void); 
 	//virtual circular_queue_state_t get_output_queue_state(unsigned int q_id=0);
 
 	virtual rofl_result_t 
-	disable();
+	down();
 
 	virtual rofl_result_t
-	enable();
+	up();
 
 protected:
-	virtual void flush_ring();
 	virtual void empty_pipe();
 	//Queues
 	static const unsigned int NETMAP_DEFAULT_NUM_OF_QUEUES=8; 
@@ -88,8 +83,6 @@ protected:
 	uint64_t memsize;
 	//pollfds
 	int fd;
-
-	int slotsize[NETMAP_DEFAULT_NUM_OF_QUEUES];
 
 	int notify_pipe[2];
 	int deferred_drain;
