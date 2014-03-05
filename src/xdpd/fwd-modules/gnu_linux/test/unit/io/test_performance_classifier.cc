@@ -55,7 +55,8 @@ void PerfClassifierTestCase::tearDown(){
 
 void PerfClassifierTestCase::test_basic(){
 	
-	uint64_t tics, accumulated_time=0;
+	uint64_t tics, accumulated_time=0, accum_classify = 0, accum_reset=0;
+	uint64_t tics1, tics2;
 	uint32_t average_tics;
 	
 	int i;
@@ -64,20 +65,25 @@ void PerfClassifierTestCase::test_basic(){
 	dump_packet_matches(clas_state->matches);
 	
 	
+	tics = rdtsc();
 	
 	for(i=0; i<NUM_OF_ITERATONS; i++){
 	
-		tics = rdtsc();
-		reset_classifier(clas_state);
+		tics1 = rdtsc();
+		//reset_classifier(clas_state);
+		tics2 = rdtsc();
 		classify_packet(clas_state,packet,PACKET_SIZE,1,0);
-		accumulated_time += rdtsc() - tics;
+		accum_classify += rdtsc() - tics2;
+		accum_reset += tics2 - tics1;
 		
 	}
+	accumulated_time += rdtsc() - tics;
 	
 	
 	average_tics = accumulated_time / NUM_OF_ITERATONS;
 	
-	fprintf(stderr, "num_of_iterations %u Average cycles: %u\n",NUM_OF_ITERATONS, average_tics);
+	fprintf(stderr, "num_of_iterations %u Average cycles: %u (classifier %u - reset %u)\n",
+			NUM_OF_ITERATONS, average_tics,(uint32_t)(accum_classify/NUM_OF_ITERATONS), (uint32_t)(accum_reset/NUM_OF_ITERATONS));
 }
 
 /*
