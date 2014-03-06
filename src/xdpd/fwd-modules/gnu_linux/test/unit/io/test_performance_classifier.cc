@@ -14,9 +14,9 @@
 
 #include "time_utils.h"
 
-#include "io/packet_classifiers/pktclassifier.h"
+#include "src/io/packet_classifiers/pktclassifier.h"
 //#ifdef C_PKTCLASSIFIER
-#include "io/packet_classifiers/c_pktclassifier/c_pktclassifier.h"
+#include "src/io/packet_classifiers/c_pktclassifier/c_pktclassifier.h"
 //#else
 	//#include "io/packet_classifiers/cpp_pktclassifier/cpp_pktclassifier.h"
 //#endif
@@ -70,7 +70,7 @@ void PerfClassifierTestCase::test_basic(){
 	for(i=0; i<NUM_OF_ITERATONS; i++){
 	
 		tics1 = rdtsc();
-		//reset_classifier(clas_state);
+		reset_classifier(clas_state);
 		tics2 = rdtsc();
 		classify_packet(clas_state,packet,PACKET_SIZE,1,0);
 		accum_classify += rdtsc() - tics2;

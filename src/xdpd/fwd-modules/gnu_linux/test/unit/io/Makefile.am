@@ -18,8 +18,8 @@ test_performance_classifier_SOURCES= test_performance_classifier.cc \
 
 test_datapacket_storage_LDADD= -lrofl -lcppunit -lpthread
 
-test_performance_classifier_CXXFLAGS= -O3 -pg
-test_performance_classifier_CFLAGS= -O3 -pg
+test_performance_classifier_CXXFLAGS= -I$(top_srcdir) -O3 -pg
+test_performance_classifier_CFLAGS= -I$(top_srcdir) -O3 -pg
 test_performance_classifier_LDADD= -lrofl -lcppunit -lpthread -lrofl_pipeline
 
 check_PROGRAMS = test_datapacket_storage test_performance_classifier
