@@ -11,6 +11,7 @@ Change log
 
 v0.3.5 
 
+[O][GNU/Linux] Increasing default PKT_IN queue size to 64 elements. 4 elements was not enough for some PKT_IN bursts 
 [+][GNU/Linux] Adding support for LLC frame parsing (ETH_TYPE)
 
 v0.3.4
