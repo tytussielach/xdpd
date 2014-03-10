@@ -9,6 +9,7 @@
 
 #include <rofl/datapath/afa/fwd_module.h>
 #include <rofl/common/utils/c_logger.h>
+#include <rofl/common/ssl_lib.h>
 #include "of10_translation_utils.h"
 
 using namespace rofl;

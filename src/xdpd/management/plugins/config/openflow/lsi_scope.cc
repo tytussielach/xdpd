@@ -27,10 +27,8 @@ using namespace rofl;
 #define LSI_NUM_OF_TABLES "num-of-tables"
 #define LSI_TABLES_MATCHING_ALGORITHM "tables-matching-algorithm"
 #define LSI_PORTS "ports" 
-#ifdef HAVE_OPENSSL
 #define LSI_SSL "ssl"
-#define LSI_SSL_CERTIFICATE_FILE "SSLCertificateFile"
-#endif /*HAVE_OPENSSL*/
+#define LSI_SSL_CERTIFICATE_FILE "ssl-certificate-file"
 
 lsi_scope::lsi_scope(std::string name, bool mandatory):scope(name, mandatory){
 
@@ -50,11 +48,9 @@ lsi_scope::lsi_scope(std::string name, bool mandatory):scope(name, mandatory){
 	register_parameter(LSI_BIND_ADDRESS_IP);
 	register_parameter(LSI_BIND_ADDRESS_PORT);
 
-#ifdef HAVE_OPENSSL
 	// ssl
 	register_parameter(LSI_SSL);
 	register_parameter(LSI_SSL_CERTIFICATE_FILE);
-#endif /* HAVE_OPENSSL */
 
 	//Number of tables and matching algorithms
 	register_parameter(LSI_NUM_OF_TABLES);
@@ -332,7 +328,6 @@ void lsi_scope::post_validate(libconfig::Setting& setting, bool dry_run){
 	// SSL details
 	bool enable_ssl = false;
 	std::string cert_and_key_file("");
-#ifdef HAVE_OPENSSL
 	if (setting.exists(LSI_SSL)) {
 		enable_ssl = true;
 
@@ -341,7 +336,6 @@ void lsi_scope::post_validate(libconfig::Setting& setting, bool dry_run){
 			throw eConfParseError();
 		}
 	}
-#endif
 
 	if(setting.exists(LSI_NUM_OF_TABLES)){
 		//Parse num_of_tables

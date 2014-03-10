@@ -2,11 +2,8 @@
 
 #include <rofl/datapath/afa/fwd_module.h>
 #include <rofl/common/utils/c_logger.h>
-#include "of12_translation_utils.h"
-
-#ifdef HAVE_OPENSSL
 #include <rofl/common/ssl_lib.h>
-#endif
+#include "of12_translation_utils.h"
 
 using namespace xdpd;
 
