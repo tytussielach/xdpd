@@ -21,6 +21,7 @@ ROFL_BEGIN_DECLS
 rofl_result_t pkt_push(datapacket_t* pkt, uint8_t* push_point, unsigned int offset, unsigned int num_of_bytes);
 rofl_result_t pkt_pop(datapacket_t* pkt, uint8_t* pop_point, unsigned int offset, unsigned int num_of_bytes);
 size_t get_buffer_length(datapacket_t* pkt);
+void classify_packet_wrapper(datapacket_t*pkt, struct classify_state* clas_state);
 
 ROFL_END_DECLS
 

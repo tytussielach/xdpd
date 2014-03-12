@@ -22,3 +22,8 @@ rofl_result_t pkt_pop(datapacket_t* pkt, uint8_t* pop_point, unsigned int offset
 size_t get_buffer_length(datapacket_t* pkt){
 	return ((xdpd::gnu_linux::datapacketx86*)pkt->platform_state)->get_buffer_length();
 }
+
+void classify_packet_wrapper(datapacket_t*pkt, struct classify_state* clas_state){
+	xdpd::gnu_linux::datapacketx86 *pkt_state = (xdpd::gnu_linux::datapacketx86*)pkt->platform_state;
+	classify_packet(clas_state, pkt_state->get_buffer(), pkt_state->get_buffer_length(), pkt_state->in_port, pkt_state->in_phy_port);
+}

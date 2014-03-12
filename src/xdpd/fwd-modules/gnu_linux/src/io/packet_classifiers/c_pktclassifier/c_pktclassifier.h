@@ -123,14 +123,14 @@ ROFL_BEGIN_DECLS
 typedef struct header_container{
 
 	//Presence of header
-	bool present;
+	//bool present;
 	
 	//Header pointer
 	void* frame;
 	size_t length;
 	
 	//NOTE not used:
-	//enum header_type type;
+	enum header_type type;
 	//Pseudo-linked list pointers (short-cuts)
 	//struct header_container* prev;
 	//struct header_container* next;
@@ -142,6 +142,10 @@ typedef struct classify_state{
 	
 	//Counters
 	unsigned int num_of_headers[HEADER_TYPE_MAX];
+	unsigned int total_headers;
+	
+	//vector of index of headers
+	int mapper[MAX_HEADERS];
 	
 	//Flag to know if it is classified
 	bool is_classified;
@@ -157,161 +161,170 @@ typedef struct classify_state{
 //inline function implementations
 inline static 
 void* get_ether_hdr(classify_state_t* clas_state, int idx){
-	unsigned int pos;
-	if(idx > (int)MAX_ETHER_FRAMES)
+	unsigned int pos, mapper_pos, num_of_headers = clas_state->num_of_headers[HEADER_TYPE_ETHER];
+	if(idx > (int)num_of_headers)
 		return NULL;
 
 	if(idx < 0) //Inner most
-		pos = FIRST_ETHER_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_ETHER] - 1;
+		mapper_pos = FIRST_ETHER_FRAME_POS + num_of_headers - 1;
 	else
-		pos = FIRST_ETHER_FRAME_POS + idx;	
+		mapper_pos = FIRST_ETHER_FRAME_POS + idx;	
 
+	pos = clas_state->mapper[mapper_pos];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_ETHER)
 		return clas_state->headers[pos].frame;	
 	return NULL;
 }
 
 inline static
 void* get_vlan_hdr(classify_state_t* clas_state, int idx){
-	unsigned int pos;	
+	unsigned int pos, mapper_pos, num_of_headers = clas_state->num_of_headers[HEADER_TYPE_VLAN];	
 
-	if(idx > (int)MAX_VLAN_FRAMES)
+	if(idx > (int)num_of_headers)
 		return NULL;
 
 	if(idx < 0) //Inner most
-		pos = FIRST_VLAN_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_VLAN] - 1;
+		mapper_pos = FIRST_VLAN_FRAME_POS + num_of_headers - 1;
 	else
-		pos = FIRST_VLAN_FRAME_POS + idx;	
+		mapper_pos = FIRST_VLAN_FRAME_POS + idx;	
 
+	pos = clas_state->mapper[mapper_pos];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if (pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_VLAN)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
 
 inline static
 void* get_mpls_hdr(classify_state_t* clas_state, int idx){
-	unsigned int pos;	
+	unsigned int pos, mapper_pos, num_of_headers = clas_state->num_of_headers[HEADER_TYPE_MPLS];	
 
-	if(idx > (int)MAX_MPLS_FRAMES)
+	if(idx > (int)num_of_headers)
 		return NULL;
 
 	if(idx < 0) //Inner most
-		pos = FIRST_MPLS_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_MPLS] - 1;
+		mapper_pos = FIRST_MPLS_FRAME_POS + num_of_headers - 1;
 	else
-		pos = FIRST_MPLS_FRAME_POS + idx;	
+		mapper_pos = FIRST_MPLS_FRAME_POS + idx;	
 
+	pos = clas_state->mapper[mapper_pos];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_MPLS)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
 
 inline static
 void* get_arpv4_hdr(classify_state_t* clas_state, int idx){
-	unsigned int pos;	
+	unsigned int pos, mapper_pos, num_of_headers = clas_state->num_of_headers[HEADER_TYPE_ARPV4];	
 
-	if(idx > (int)MAX_ARPV4_FRAMES)
+	if(idx > (int)num_of_headers)
 		return NULL;
 
 	if(idx < 0) //Inner most
-		pos = FIRST_ARPV4_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_ARPV4] - 1;
+		mapper_pos = FIRST_ARPV4_FRAME_POS + num_of_headers - 1;
 	else
-		pos = FIRST_ARPV4_FRAME_POS + idx;	
+		mapper_pos = FIRST_ARPV4_FRAME_POS + idx;	
 
+	pos = clas_state->mapper[mapper_pos];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_ARPV4)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
 
 inline static
 void* get_ipv4_hdr(classify_state_t* clas_state, int idx){
-	unsigned int pos;	
+	unsigned int pos, mapper_pos, num_of_headers = clas_state->num_of_headers[HEADER_TYPE_IPV4];	
 
-	if(idx > (int)MAX_IPV4_FRAMES)
+	if(idx > (int)num_of_headers)
 		return NULL;
 
 	if(idx < 0) //Inner most const
-		pos = FIRST_IPV4_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_IPV4] - 1;
+		mapper_pos = FIRST_IPV4_FRAME_POS + num_of_headers - 1;
 	else
-		pos = FIRST_IPV4_FRAME_POS + idx;	
+		mapper_pos = FIRST_IPV4_FRAME_POS + idx;	
 
+	pos = clas_state->mapper[mapper_pos];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_IPV4)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
 
 inline static
 void* get_icmpv4_hdr(classify_state_t* clas_state, int idx){
-	unsigned int pos;	
+	unsigned int pos, mapper_pos, num_of_headers = clas_state->num_of_headers[HEADER_TYPE_ICMPV4];	
 
-	if(idx > (int)MAX_ICMPV4_FRAMES)
+	if(idx > (int)num_of_headers)
 		return NULL;
 
 	if(idx < 0) //Inner most
-		pos = FIRST_ICMPV4_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_ICMPV4] - 1;
+		mapper_pos = FIRST_ICMPV4_FRAME_POS + num_of_headers - 1;
 	else
-		pos = FIRST_ICMPV4_FRAME_POS + idx;	
+		mapper_pos = FIRST_ICMPV4_FRAME_POS + idx;	
 
+	pos = clas_state->mapper[mapper_pos];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_ICMPV4)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
 
 inline static
 void* get_ipv6_hdr(classify_state_t* clas_state, int idx){
-	unsigned int pos;	
+	unsigned int pos, mapper_pos, num_of_headers = clas_state->num_of_headers[HEADER_TYPE_IPV6];	
 
-	if(idx > (int)MAX_IPV6_FRAMES)
+	if(idx > (int)num_of_headers)
 		return NULL;
 
 	if(idx < 0) //Inner most
-		pos = FIRST_IPV6_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_IPV6] - 1;
+		mapper_pos = FIRST_IPV6_FRAME_POS + num_of_headers - 1;
 	else
-		pos = FIRST_IPV6_FRAME_POS + idx;
+		mapper_pos = FIRST_IPV6_FRAME_POS + idx;
 
+	pos = clas_state->mapper[mapper_pos];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_IPV6)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
 
 inline static
 void* get_icmpv6_hdr(classify_state_t* clas_state, int idx){
-	unsigned int pos;	
+	unsigned int pos, mapper_pos, num_of_headers = clas_state->num_of_headers[HEADER_TYPE_ICMPV6];	
 
-	if(idx > (int)MAX_ICMPV6_FRAMES)
+	if(idx > (int)num_of_headers)
 		return NULL;
 
 	if(idx < 0) //Inner most
-		pos = FIRST_ICMPV6_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_ICMPV6] - 1;
+		mapper_pos = FIRST_ICMPV6_FRAME_POS + num_of_headers - 1;
 	else
-		pos = FIRST_ICMPV6_FRAME_POS + idx;	
+		mapper_pos = FIRST_ICMPV6_FRAME_POS + idx;	
 
+	pos = clas_state->mapper[mapper_pos];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_ICMPV6)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
 
 inline static
 void* get_icmpv6_opt_hdr(classify_state_t* clas_state, int idx){
-	unsigned int pos;	
+	unsigned int pos, mapper_pos, num_of_headers = clas_state->num_of_headers[HEADER_TYPE_ICMPV6_OPT];	
 
-	if(idx > (int)MAX_ICMPV6_OPT_FRAMES)
+	if(idx > (int)num_of_headers)
 		return NULL;
 
 	if(idx < 0) //Inner most
-		pos = FIRST_ICMPV6_OPT_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_ICMPV6_OPT] - 1;
+		mapper_pos = FIRST_ICMPV6_OPT_FRAME_POS + num_of_headers - 1;
 	else
-		pos = FIRST_ICMPV6_OPT_FRAME_POS + idx;	
+		mapper_pos = FIRST_ICMPV6_OPT_FRAME_POS + idx;	
 
+	pos = clas_state->mapper[mapper_pos];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_ICMPV6_OPT)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
@@ -320,10 +333,10 @@ inline static
 void* get_icmpv6_opt_lladr_source_hdr(classify_state_t* clas_state, int idx){
 	//only one option of this kind is allowed
 	unsigned int pos;
-	pos = FIRST_ICMPV6_OPT_FRAME_POS + OFFSET_ICMPV6_OPT_LLADDR_SOURCE;
 
+	pos = clas_state->mapper[FIRST_ICMPV6_OPT_FRAME_POS + OFFSET_ICMPV6_OPT_LLADDR_SOURCE];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_ICMPV6_OPT)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
@@ -332,10 +345,10 @@ inline static
 void* get_icmpv6_opt_lladr_target_hdr(classify_state_t* clas_state, int idx){
 	//only one option of this kind is allowed
 	unsigned int pos;
-	pos = FIRST_ICMPV6_OPT_FRAME_POS + OFFSET_ICMPV6_OPT_LLADDR_TARGET;
 
+	pos = clas_state->mapper[FIRST_ICMPV6_OPT_FRAME_POS + OFFSET_ICMPV6_OPT_LLADDR_TARGET];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_ICMPV6_OPT)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
@@ -344,144 +357,108 @@ inline static
 void* get_icmpv6_opt_prefix_info_hdr(classify_state_t* clas_state, int idx){
 	//only one option of this kind is allowed
 	unsigned int pos;
-	pos = FIRST_ICMPV6_OPT_FRAME_POS + OFFSET_ICMPV6_OPT_PREFIX_INFO;
 
+	pos = clas_state->mapper[FIRST_ICMPV6_OPT_FRAME_POS + OFFSET_ICMPV6_OPT_PREFIX_INFO];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_ICMPV6_OPT)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
 
 inline static
 void* get_udp_hdr(classify_state_t* clas_state, int idx){
-	unsigned int pos;	
+	unsigned int pos, mapper_pos, num_of_headers = clas_state->num_of_headers[HEADER_TYPE_UDP];	
 
-	if(idx > (int)MAX_UDP_FRAMES)
+	if(idx > (int)num_of_headers)
 		return NULL;
 
 	if(idx < 0) //Inner most
-		pos = FIRST_UDP_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_UDP] - 1;
+		mapper_pos = FIRST_UDP_FRAME_POS + num_of_headers - 1;
 	else
-		pos = FIRST_UDP_FRAME_POS + idx;	
+		mapper_pos = FIRST_UDP_FRAME_POS + idx;	
 
+	pos = clas_state->mapper[mapper_pos];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_UDP)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
 
 inline static
 void* get_tcp_hdr(classify_state_t* clas_state, int idx){
-	unsigned int pos;	
+	unsigned int pos, mapper_pos, num_of_headers = clas_state->num_of_headers[HEADER_TYPE_TCP];	
 
-	if(idx > (int)MAX_TCP_FRAMES)
+	if(idx > (int)num_of_headers)
 		return NULL;
 
 	if(idx < 0) //Inner most
-		pos = FIRST_TCP_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_TCP] - 1;
+		mapper_pos = FIRST_TCP_FRAME_POS + num_of_headers - 1;
 	else
-		pos = FIRST_TCP_FRAME_POS + idx;	
+		mapper_pos = FIRST_TCP_FRAME_POS + idx;	
 
+	pos = clas_state->mapper[mapper_pos];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_TCP)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
 
 inline static
 void* get_pppoe_hdr(classify_state_t* clas_state, int idx){
-	unsigned int pos;	
+	unsigned int pos, mapper_pos, num_of_headers = clas_state->num_of_headers[HEADER_TYPE_PPPOE];	
 
-	if(idx > (int)MAX_PPPOE_FRAMES)
+	if(idx > (int)num_of_headers)
 		return NULL;
 
 	if(idx < 0) //Inner most
-		pos = FIRST_PPPOE_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_PPPOE] - 1;
+		mapper_pos = FIRST_PPPOE_FRAME_POS + num_of_headers - 1;
 	else
-		pos = FIRST_PPPOE_FRAME_POS + idx;	
+		mapper_pos = FIRST_PPPOE_FRAME_POS + idx;	
 
+	pos = clas_state->mapper[mapper_pos];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_PPPOE)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
 
 inline static
 void* get_ppp_hdr(classify_state_t* clas_state, int idx){
-	unsigned int pos;	
+	unsigned int pos, mapper_pos, num_of_headers = clas_state->num_of_headers[HEADER_TYPE_PPP];	
 
-	if(idx > (int)MAX_PPP_FRAMES)
+	if(idx > (int)num_of_headers)
 		return NULL;
 
 	if(idx < 0) //Inner most
-		pos = FIRST_PPP_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_PPP] - 1;
+		mapper_pos = FIRST_PPP_FRAME_POS + num_of_headers - 1;
 	else
-		pos = FIRST_PPP_FRAME_POS + idx;	
+		mapper_pos = FIRST_PPP_FRAME_POS + idx;	
 
+	pos = clas_state->mapper[mapper_pos];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_PPP)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
 
 inline static
 void* get_gtpu_hdr(classify_state_t* clas_state, int idx){
-	unsigned int pos;
+	unsigned int pos, mapper_pos, num_of_headers = clas_state->num_of_headers[HEADER_TYPE_GTP];
 
-	if(idx > (int)MAX_GTP_FRAMES)
+	if(idx > (int)num_of_headers)
 		return NULL;
 
 	if(idx < 0) //Inner most
-		pos = FIRST_GTP_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_GTP] - 1;
+		mapper_pos = FIRST_GTP_FRAME_POS + num_of_headers - 1;
 	else
-		pos = FIRST_GTP_FRAME_POS + idx;
+		mapper_pos = FIRST_GTP_FRAME_POS + idx;
 
+	pos = clas_state->mapper[mapper_pos];
 	//Return the index
-	if(clas_state->headers[pos].present)
+	if( pos < clas_state->total_headers && clas_state->headers[pos].type == HEADER_TYPE_GTP)
 		return clas_state->headers[pos].frame;
 	return NULL;
 }
-
-//shifts
-inline static 
-void shift_ether(classify_state_t* clas_state, int idx, ssize_t bytes){
-	//NOTE if bytes id < 0 the header will be shifted left, if it is > 0, right
-	unsigned int pos;
-	if(idx > (int)MAX_ETHER_FRAMES)
-		return;
-
-	if(idx < 0) //Inner most
-		pos = FIRST_ETHER_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_ETHER] - 1;
-	else
-		pos = FIRST_ETHER_FRAME_POS + idx;	
-
-	//Return the index
-	if(clas_state->headers[pos].present){
-		clas_state->headers[pos].frame = (uint8_t*)(clas_state->headers[pos].frame) + bytes;
-		clas_state->headers[pos].length += bytes;
-	}
-}
-
-inline static
-void shift_vlan(classify_state_t* clas_state, int idx, ssize_t bytes){
-	//NOTE if bytes id < 0 the header will be shifted left, if it is > 0, right
-	unsigned int pos;	
-
-	if(idx > (int)MAX_VLAN_FRAMES)
-		return;
-
-	if(idx < 0) //Inner most
-		pos = FIRST_VLAN_FRAME_POS + clas_state->num_of_headers[HEADER_TYPE_VLAN] - 1;
-	else
-		pos = FIRST_VLAN_FRAME_POS + idx;	
-
-	//Return the index
-	if(clas_state->headers[pos].present){
-		clas_state->headers[pos].frame = (uint8_t*)(clas_state->headers[pos].frame) + bytes;
-		clas_state->headers[pos].length += bytes;
-	}
-}
-
 
 ROFL_END_DECLS
 

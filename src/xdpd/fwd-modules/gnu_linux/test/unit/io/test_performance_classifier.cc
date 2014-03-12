@@ -82,7 +82,7 @@ void PerfClassifierTestCase::test_basic(){
 	
 	average_tics = accumulated_time / NUM_OF_ITERATONS;
 	
-	fprintf(stderr, "num_of_iterations %u Average cycles: %u (classifier %u - reset %u)\n",
+	fprintf(stderr, "num_of_iterations %u Average (total classification reset) cycles: %u %u %u\n",
 			NUM_OF_ITERATONS, average_tics,(uint32_t)(accum_classify/NUM_OF_ITERATONS), (uint32_t)(accum_reset/NUM_OF_ITERATONS));
 }
 
