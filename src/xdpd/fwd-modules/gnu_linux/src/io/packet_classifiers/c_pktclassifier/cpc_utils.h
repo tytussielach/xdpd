@@ -20,7 +20,7 @@
 	x>>=16; \
 }while(0)
 
-#define CPC_IN_HOSTBYTEORDER
+//#define CPC_IN_HOSTBYTEORDER
 #ifdef CPC_IN_HOSTBYTEORDER
 #  define CPC_HTOBE16(x) htobe16(x)
 #  define CPC_HTOLE16(x) htole16(x)

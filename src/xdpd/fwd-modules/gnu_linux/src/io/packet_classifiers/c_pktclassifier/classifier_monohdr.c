@@ -1,4 +1,4 @@
-#include "c_pktclassifier.h"
+#include "classifier_monohdr.h"
 #include <stdlib.h>
 #include <string.h>
 #include <rofl/common/utils/c_logger.h>
@@ -48,32 +48,11 @@ void classify_packet(classify_state_t* clas_state, uint8_t* data, size_t len, ui
 }
 
 void reset_classifier(classify_state_t* clas_state){
-
 	//packet_matches_t* matches = clas_state->matches;
-	//memset(clas_state,0,sizeof(classify_state_t));
-	//clas_state->matches = matches;
-	
-	clas_state->total_headers = 0;
-	//memset(clas_state->num_of_headers, 0, sizeof(clas_state->num_of_headers));
-	//for(i=HEADER_TYPE_ETHER; i<HEADER_TYPE_MAX; i++ )
-	clas_state->num_of_headers[HEADER_TYPE_ETHER]=0;
-	clas_state->num_of_headers[HEADER_TYPE_VLAN]=0;
-	clas_state->num_of_headers[HEADER_TYPE_MPLS]=0;
-	clas_state->num_of_headers[HEADER_TYPE_ARPV4]=0;
-	clas_state->num_of_headers[HEADER_TYPE_IPV4]=0;
-	clas_state->num_of_headers[HEADER_TYPE_ICMPV4]=0;
-	clas_state->num_of_headers[HEADER_TYPE_IPV6]=0;
-	clas_state->num_of_headers[HEADER_TYPE_ICMPV6_OPT]=0;
-	clas_state->num_of_headers[HEADER_TYPE_UDP]=0;
-	clas_state->num_of_headers[HEADER_TYPE_TCP]=0;
-	clas_state->num_of_headers[HEADER_TYPE_SCTP]=0;
-	clas_state->num_of_headers[HEADER_TYPE_PPPOE]=0;
-	clas_state->num_of_headers[HEADER_TYPE_PPP]=0;
-	clas_state->num_of_headers[HEADER_TYPE_GTP]=0;
-
 	//if(likely(matches != NULL))
 		//memset(clas_state->matches,0,sizeof(packet_matches_t));
 	
+	clas_state->total_headers = 0;
 	clas_state->is_classified = false;
 }
 
@@ -90,11 +69,8 @@ void parse_ethernet(classify_state_t* clas_state, uint8_t *data, size_t datalen)
 	clas_state->headers[total_headers].frame = ether;
 	clas_state->headers[total_headers].length = datalen;
 	clas_state->headers[total_headers].type = HEADER_TYPE_ETHER;
-	//update mapper
-	unsigned int num_of_ether = clas_state->num_of_headers[HEADER_TYPE_ETHER];
-	clas_state->mapper[FIRST_ETHER_FRAME_POS+num_of_ether] = clas_state->total_headers;
-	//update counters
-	clas_state->num_of_headers[HEADER_TYPE_ETHER] = num_of_ether+1;
+	//update mapper & counters
+	clas_state->mapper[HEADER_TYPE_ETHER] = clas_state->total_headers;
 	clas_state->total_headers = total_headers+1;
 
 	//Increment pointers and decrement remaining payload size
@@ -171,11 +147,8 @@ void parse_vlan(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 	clas_state->headers[total_headers].frame = vlan;
 	clas_state->headers[total_headers].length = datalen;
 	clas_state->headers[total_headers].type = HEADER_TYPE_VLAN;
-	//upload mapper
-	unsigned int num_of_vlan = clas_state->num_of_headers[HEADER_TYPE_VLAN];
-	clas_state->mapper[FIRST_VLAN_FRAME_POS+num_of_vlan] = clas_state->total_headers;
-	//update counters
-	clas_state->num_of_headers[HEADER_TYPE_VLAN] = num_of_vlan+1;
+	//upload mapper & counters
+	clas_state->mapper[HEADER_TYPE_VLAN] = clas_state->total_headers;
 	clas_state->total_headers = total_headers+1;
 
 	//Increment pointers and decrement remaining payload size
@@ -240,11 +213,8 @@ void parse_mpls(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 	clas_state->headers[total_headers].frame = mpls;
 	clas_state->headers[total_headers].length = datalen;
 	clas_state->headers[total_headers].type = HEADER_TYPE_MPLS;
-	//update mapper
-	unsigned int num_of_mpls = clas_state->num_of_headers[HEADER_TYPE_MPLS];
-	clas_state->mapper[FIRST_MPLS_FRAME_POS + num_of_mpls] = clas_state->total_headers;
-	//update counters
-	clas_state->num_of_headers[HEADER_TYPE_MPLS] = num_of_mpls+1;
+	//update mapper & counters
+	clas_state->mapper[HEADER_TYPE_MPLS] = clas_state->total_headers;
 	clas_state->total_headers = total_headers+1;
 
 	//Increment pointers and decrement remaining payload size
@@ -277,11 +247,8 @@ void parse_pppoe(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 	clas_state->headers[total_headers].frame = pppoe;
 	clas_state->headers[total_headers].length = datalen;
 	clas_state->headers[total_headers].type = HEADER_TYPE_PPPOE;
-	//Update mapper
-	unsigned int num_of_pppoe = clas_state->num_of_headers[HEADER_TYPE_PPPOE];
-	clas_state->mapper[FIRST_PPPOE_FRAME_POS+num_of_pppoe] = clas_state->total_headers;
-	//update counters
-	clas_state->num_of_headers[HEADER_TYPE_PPPOE] = num_of_pppoe+1;
+	//Update mapper & counters
+	clas_state->mapper[HEADER_TYPE_PPPOE] = clas_state->total_headers;
 	clas_state->total_headers = total_headers+1;
 	
 	
@@ -343,11 +310,8 @@ void parse_ppp(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 	clas_state->headers[total_headers].frame = ppp; 
 	clas_state->headers[total_headers].length = datalen;
 	clas_state->headers[total_headers].type = HEADER_TYPE_PPP;
-	//update mapper
-	unsigned int num_of_ppp = clas_state->num_of_headers[HEADER_TYPE_PPP];
-	clas_state->mapper[FIRST_PPP_FRAME_POS + num_of_ppp] = clas_state->total_headers;
-	//update counters
-	clas_state->num_of_headers[HEADER_TYPE_PPP] = num_of_ppp+1;
+	//update mapper & counters
+	clas_state->mapper[HEADER_TYPE_PPP] = clas_state->total_headers;
 	clas_state->total_headers = total_headers+1;
 
 	//Increment pointers and decrement remaining payload size
@@ -385,11 +349,8 @@ void parse_arpv4(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 	clas_state->headers[total_headers].frame = arpv4;
 	clas_state->headers[total_headers].length = datalen;
 	clas_state->headers[total_headers].type = HEADER_TYPE_ARPV4;
-	//Update mapper
-	unsigned int num_of_arpv4 = clas_state->num_of_headers[HEADER_TYPE_ARPV4];
-	clas_state->mapper[FIRST_ARPV4_FRAME_POS + num_of_arpv4] = clas_state->total_headers;
-	//Update counters
-	clas_state->num_of_headers[HEADER_TYPE_ARPV4] = num_of_arpv4+1;
+	//Update mapper & counters
+	clas_state->mapper[HEADER_TYPE_ARPV4] = clas_state->total_headers;
 	clas_state->total_headers = total_headers+1;
 
 	//Increment pointers and decrement remaining payload size
@@ -420,11 +381,8 @@ void parse_ipv4(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 	clas_state->headers[total_headers].frame = ipv4;
 	clas_state->headers[total_headers].length = datalen;
 	clas_state->headers[total_headers].type = HEADER_TYPE_IPV4;
-	//Update mapper
-	unsigned int num_of_ipv4 = clas_state->num_of_headers[HEADER_TYPE_IPV4];
-	clas_state->mapper[FIRST_IPV4_FRAME_POS + num_of_ipv4] = clas_state->total_headers;
-	//Update counters
-	clas_state->num_of_headers[HEADER_TYPE_IPV4] = num_of_ipv4+1;
+	//Update mapper & counters
+	clas_state->mapper[HEADER_TYPE_IPV4] = clas_state->total_headers;
 	clas_state->total_headers = total_headers+1;
 
 	//Increment pointers and decrement remaining payload size
@@ -496,11 +454,8 @@ void parse_icmpv4(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 	clas_state->headers[total_headers].frame = icmpv4; 
 	clas_state->headers[total_headers].length = datalen;
 	clas_state->headers[total_headers].type = HEADER_TYPE_ICMPV4;
-	//Update mapper
-	unsigned int num_of_icmpv4 = clas_state->num_of_headers[HEADER_TYPE_ICMPV4];
-	clas_state->mapper[FIRST_ICMPV4_FRAME_POS + num_of_icmpv4] = clas_state->total_headers;
-	//update counters
-	clas_state->num_of_headers[HEADER_TYPE_ICMPV4] = num_of_icmpv4+1;
+	//Update mapper & counters
+	clas_state->mapper[HEADER_TYPE_ICMPV4] = clas_state->total_headers;
 	clas_state->total_headers = total_headers+1;
 
 	//Set reference
@@ -532,11 +487,8 @@ void parse_ipv6(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 	clas_state->headers[total_headers].frame = ipv6;
 	clas_state->headers[total_headers].length = datalen;
 	clas_state->headers[total_headers].type = HEADER_TYPE_IPV6;
-	//update mapper
-	unsigned int num_of_ipv6 = clas_state->num_of_headers[HEADER_TYPE_IPV6];
-	clas_state->mapper[FIRST_IPV6_FRAME_POS + num_of_ipv6] = clas_state->total_headers;
-	//update counters
-	clas_state->num_of_headers[HEADER_TYPE_IPV6] = num_of_ipv6+1;
+	//update mapper & counters
+	clas_state->mapper[HEADER_TYPE_IPV6] = clas_state->total_headers;
 	clas_state->total_headers = total_headers+1;
 
 	//Increment pointers and decrement remaining payload size
@@ -610,13 +562,12 @@ void parse_icmpv6_opts(classify_state_t* clas_state, uint8_t *data, size_t datal
 	//Set frame
 	clas_state->headers[total_headers].frame = icmpv6_opt;
 	clas_state->headers[total_headers].length = datalen;
-	clas_state->headers[total_headers].type = HEADER_TYPE_ICMPV6_OPT;
-	unsigned int num_of_icmpv6_opt = clas_state->num_of_headers[HEADER_TYPE_ICMPV6_OPT];
 	
 	//we asume here that there is only one option for each type
 	switch(icmpv6_opt->type){
 		case ICMPV6_OPT_LLADDR_SOURCE:
-			clas_state->mapper[FIRST_ICMPV6_OPT_FRAME_POS + OFFSET_ICMPV6_OPT_LLADDR_SOURCE] = clas_state->total_headers;
+			clas_state->headers[total_headers].type = HEADER_TYPE_ICMPV6_OPT_LLADDR_SOURCE;
+			clas_state->mapper[HEADER_TYPE_ICMPV6_OPT_LLADDR_SOURCE] = clas_state->total_headers;
 			
 			data += sizeof(struct cpc_icmpv6_lla_option);		//update data pointer
 			datalen -= sizeof(struct cpc_icmpv6_lla_option);	//decrement data length
@@ -625,7 +576,8 @@ void parse_icmpv6_opts(classify_state_t* clas_state, uint8_t *data, size_t datal
 
 			break;
 		case ICMPV6_OPT_LLADDR_TARGET:
-			clas_state->mapper[FIRST_ICMPV6_OPT_FRAME_POS + OFFSET_ICMPV6_OPT_LLADDR_TARGET] = clas_state->total_headers;
+			clas_state->headers[total_headers].type = HEADER_TYPE_ICMPV6_OPT_LLADDR_TARGET;
+			clas_state->mapper[HEADER_TYPE_ICMPV6_OPT_LLADDR_TARGET] = clas_state->total_headers;
 			
 			data += sizeof(struct cpc_icmpv6_lla_option);		 //update pointers
 			datalen -= sizeof(struct cpc_icmpv6_lla_option);	//decrement data length
@@ -634,7 +586,8 @@ void parse_icmpv6_opts(classify_state_t* clas_state, uint8_t *data, size_t datal
 
 			break;
 		case ICMPV6_OPT_PREFIX_INFO:
-			clas_state->mapper[FIRST_ICMPV6_OPT_FRAME_POS + OFFSET_ICMPV6_OPT_PREFIX_INFO] = clas_state->total_headers;
+			clas_state->headers[total_headers].type = HEADER_TYPE_ICMPV6_OPT_PREFIX_INFO;
+			clas_state->mapper[HEADER_TYPE_ICMPV6_OPT_PREFIX_INFO] = clas_state->total_headers;
 			
 			data += sizeof(struct cpc_icmpv6_prefix_info);		 //update pointers
 			datalen -= sizeof(struct cpc_icmpv6_prefix_info);	//decrement data length
@@ -645,7 +598,6 @@ void parse_icmpv6_opts(classify_state_t* clas_state, uint8_t *data, size_t datal
 			break;
 	}
 	//update counters
-	clas_state->num_of_headers[HEADER_TYPE_ICMPV6_OPT] = num_of_icmpv6_opt+1;
 	clas_state->total_headers = total_headers+1;
 
 	if (datalen > 0){
@@ -665,11 +617,8 @@ void parse_icmpv6(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 	clas_state->headers[total_headers].frame = icmpv6;
 	clas_state->headers[total_headers].length = datalen;
 	clas_state->headers[total_headers].type = HEADER_TYPE_ICMPV6;
-	//update mapper
-	unsigned int num_of_icmpv6 = clas_state->num_of_headers[HEADER_TYPE_ICMPV6];
-	clas_state->mapper[FIRST_ICMPV6_FRAME_POS + num_of_icmpv6] = clas_state->total_headers;
-	//update counters
-	clas_state->num_of_headers[HEADER_TYPE_ICMPV6] = num_of_icmpv6+1;
+	//update mapper & counters
+	clas_state->mapper[HEADER_TYPE_ICMPV6] = clas_state->total_headers;
 	clas_state->total_headers = total_headers+1;
 
 	//Initialize icmpv6 packet matches
@@ -724,11 +673,8 @@ void parse_tcp(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 	clas_state->headers[total_headers].frame = tcp;
 	clas_state->headers[total_headers].length = datalen;
 	clas_state->headers[total_headers].type = HEADER_TYPE_TCP;
-	//update mapper
-	unsigned int num_of_tcp = clas_state->num_of_headers[HEADER_TYPE_TCP];
-	clas_state->mapper[FIRST_TCP_FRAME_POS + num_of_tcp] = clas_state->total_headers;
-	//update counters
-	clas_state->num_of_headers[HEADER_TYPE_TCP] = num_of_tcp+1;
+	//update mapper & counters
+	clas_state->mapper[HEADER_TYPE_TCP] = clas_state->total_headers;
 	clas_state->total_headers = total_headers+1;
 
 	//Increment pointers and decrement remaining payload size
@@ -756,11 +702,8 @@ void parse_udp(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 	clas_state->headers[total_headers].frame = udp;
 	clas_state->headers[total_headers].length = datalen;
 	clas_state->headers[total_headers].type = HEADER_TYPE_UDP;
-	//update mapper
-	unsigned int num_of_udp = clas_state->num_of_headers[HEADER_TYPE_UDP];
-	clas_state->mapper[FIRST_UDP_FRAME_POS + num_of_udp] = clas_state->total_headers;
-	//update counters
-	clas_state->num_of_headers[HEADER_TYPE_UDP] = num_of_udp+1;
+	//update mapper & counters
+	clas_state->mapper[HEADER_TYPE_UDP] = clas_state->total_headers;
 	clas_state->total_headers = total_headers+1;
 
 	//Set reference
@@ -797,11 +740,8 @@ void parse_gtp(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 	clas_state->headers[total_headers].frame = gtp;
 	clas_state->headers[total_headers].length = datalen;
 	clas_state->headers[total_headers].type = HEADER_TYPE_GTP;
-	//update mapper
-	unsigned int num_of_gtp = clas_state->num_of_headers[HEADER_TYPE_GTP];
-	clas_state->mapper[FIRST_GTP_FRAME_POS + num_of_gtp] = clas_state->total_headers;
-	//update counters
-	clas_state->num_of_headers[HEADER_TYPE_GTP] = num_of_gtp+1;
+	//update mapper & counters
+	clas_state->mapper[HEADER_TYPE_GTP] = clas_state->total_headers;
 	clas_state->total_headers = total_headers+1;
 
 	//Increment pointers and decrement remaining payload size
@@ -819,11 +759,10 @@ void parse_gtp(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 
 void pop_vlan(datapacket_t* pkt, classify_state_t* clas_state){
 	//cpc_eth_hdr_t* ether_header;
-	
-	int pos = clas_state->mapper[FIRST_VLAN_FRAME_POS];
-	
+#error "push and pop do not work"
+	int pos = clas_state->mapper[HEADER_TYPE_VLAN];
 	// outermost vlan tag, if any, following immediately the initial ethernet header
-	if(clas_state->num_of_headers[HEADER_TYPE_VLAN] == 0 || pos >= clas_state->total_headers || clas_state->headers[pos].type != HEADER_TYPE_VLAN )
+	if( pos >= clas_state->total_headers || clas_state->headers[pos].type != HEADER_TYPE_VLAN )
 		return;
 
 	//Take header out from packet
@@ -836,8 +775,8 @@ void pop_vlan(datapacket_t* pkt, classify_state_t* clas_state){
 void pop_mpls(datapacket_t* pkt, classify_state_t* clas_state, uint16_t ether_type){
 	// outermost mpls tag, if any, following immediately the initial ethernet header
 
-	int pos = clas_state->mapper[FIRST_MPLS_FRAME_POS];
-	if (clas_state->num_of_headers[HEADER_TYPE_MPLS] == 0 || pos >= clas_state->total_headers || clas_state->headers[pos].type != HEADER_TYPE_MPLS )
+	int pos = clas_state->mapper[HEADER_TYPE_MPLS];
+	if ( pos >= clas_state->total_headers || clas_state->headers[pos].type != HEADER_TYPE_MPLS )
 		return;
 	
 	cpc_mpls_hdr_t* mpls = (cpc_mpls_hdr_t*) clas_state->headers[pos].frame;
@@ -854,9 +793,9 @@ void pop_mpls(datapacket_t* pkt, classify_state_t* clas_state, uint16_t ether_ty
 void pop_pppoe(datapacket_t* pkt, classify_state_t* clas_state, uint16_t ether_type){
 	cpc_eth_hdr_t* ether_header;
 	
-	int pos = clas_state->mapper[FIRST_PPPOE_FRAME_POS];
+	int pos = clas_state->mapper[HEADER_TYPE_PPPOE];
 	// outermost mpls tag, if any, following immediately the initial ethernet header
-	if(clas_state->num_of_headers[HEADER_TYPE_PPPOE] == 0 || pos >= clas_state->total_headers || clas_state->headers[pos].type == HEADER_TYPE_PPPOE)
+	if( pos >= clas_state->total_headers || clas_state->headers[pos].type == HEADER_TYPE_PPPOE)
 		return;
 
 	//Recover the ether(0)
@@ -888,20 +827,20 @@ void pop_pppoe(datapacket_t* pkt, classify_state_t* clas_state, uint16_t ether_t
 void pop_gtp(datapacket_t* pkt, classify_state_t* clas_state, uint16_t ether_type){
 	// assumption: UDP -> GTP
 	
-	int pos_ipv4 = clas_state->mapper[FIRST_IPV4_FRAME_POS];
-	int pos_udp = clas_state->mapper[FIRST_UDP_FRAME_POS];
-	int pos_gtp = clas_state->mapper[FIRST_GTP_FRAME_POS];
+	int pos_ipv4 = clas_state->mapper[HEADER_TYPE_IPV4];
+	int pos_udp = clas_state->mapper[HEADER_TYPE_UDP];
+	int pos_gtp = clas_state->mapper[HEADER_TYPE_GTP];
 
 	// an ip header must be present
-	if( (clas_state->num_of_headers[HEADER_TYPE_IPV4] != 1) || pos_ipv4 >= clas_state->total_headers || (clas_state->headers[pos_ipv4].type != HEADER_TYPE_IPV4) )
+	if( pos_ipv4 >= clas_state->total_headers || (clas_state->headers[pos_ipv4].type != HEADER_TYPE_IPV4) )
 		return;
 
 	// a udp header must be present
-	if( (clas_state->num_of_headers[HEADER_TYPE_UDP] != 1) || pos_udp >= clas_state->total_headers || (clas_state->headers[pos_udp].type != HEADER_TYPE_UDP) )
+	if( pos_udp >= clas_state->total_headers || (clas_state->headers[pos_udp].type != HEADER_TYPE_UDP) )
 		return;
 
 	// a gtp header must be present
-	if(clas_state->num_of_headers[HEADER_TYPE_GTP] == 0 || pos_gtp >= clas_state->total_headers || clas_state->headers[pos_gtp].type != HEADER_TYPE_GTP)
+	if( pos_gtp >= clas_state->total_headers || clas_state->headers[pos_gtp].type != HEADER_TYPE_GTP)
 		return;
 
 
@@ -918,7 +857,7 @@ void pop_gtp(datapacket_t* pkt, classify_state_t* clas_state, uint16_t ether_typ
 
 void* push_vlan(datapacket_t* pkt, classify_state_t* clas_state, uint16_t ether_type){
 
-	if ((NULL == get_ether_hdr(clas_state, 0)) || clas_state->num_of_headers[HEADER_TYPE_VLAN] == MAX_VLAN_FRAMES ){
+	if ( NULL == get_ether_hdr(clas_state, 0) ){
 		return NULL;
 	}
 
