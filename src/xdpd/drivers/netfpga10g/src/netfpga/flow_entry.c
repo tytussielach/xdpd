@@ -119,6 +119,8 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
 	netfpga_flow_entry_matches_mask_t* masks = entry->masks;
 	uint32_t tmp_ipv4_mask;
 	int num_of_matches = 0;
+	netfpga_align_mac_addr_t tmp_mac, tmp_mask;
+	int i;
 
 	memset(masks, 0xFF, sizeof(*(masks)));
 
@@ -135,9 +137,30 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
 				num_of_matches++;
 				break;
  			case OF1X_MATCH_ETH_DST:
-
+		
+				
 				memcpy(&matches->eth_dst.addr, &(match->__tern->value.u64), 6);
 				memcpy(&masks->eth_dst.addr, &(match->__tern->mask.u64), 6);
+				
+				tmp_mac=matches->eth_dst;
+				tmp_mask=masks->eth_dst;
+
+				
+				for (i=0;i<6;i++){
+				matches->eth_dst.addr[i]=tmp_mac.addr[5-i];
+				masks->eth_dst.addr[i]=~tmp_mask.addr[5-i];
+				}
+
+
+								
+			
+				//masks->eth_dst.addr=of1x_get_match_mask64(match);
+				ROFL_DEBUG("\n addr orig: %x, wyjscie: %x",match->__tern->value.u64, matches->eth_dst.addr );	
+				ROFL_DEBUG("\n mask orig: %x, wyjscie: %x",match->__tern->mask.u64, masks->eth_dst.addr );
+
+				
+
+							
 				if(of1x_get_match_mask64(match) == 0x00FFFFFFULL)
 					//Not wildcarded
 					num_of_matches++;
@@ -146,6 +169,15 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
 				
 				memcpy(&matches->eth_src.addr, &(match->__tern->value.u64), 6);
 				memcpy(&masks->eth_src.addr, &(match->__tern->mask.u64), 6);
+				
+				tmp_mac=matches->eth_src;
+				tmp_mask=masks->eth_src;
+				
+				for (i=0;i<6;i++){
+				matches->eth_src.addr[i]=tmp_mac.addr[5-i];
+				masks->eth_src.addr[i]=~tmp_mask.addr[5-i];
+				}
+
 				if(of1x_get_match_mask64(match) == 0x00FFFFFFULL)
 					//Not wildcarded
 					num_of_matches++;

@@ -81,7 +81,7 @@ rofl_result_t netfpga_dump_wildcard_hw_entries(){
 
 //Specific add command for wildcard entries
 static rofl_result_t netfpga_add_entry_hw(netfpga_flow_entry_t* entry){
-
+	ROFL_DEBUG("\n  %s : % d  netfpga_add_entry_hw  \n ", __FILE__,__LINE__);
 	unsigned int i;
 	uint32_t* aux;
 	
@@ -90,17 +90,95 @@ static rofl_result_t netfpga_add_entry_hw(netfpga_flow_entry_t* entry){
 
 	//Set Row address
 	if(entry->type == NETFPGA_FE_FIXED ){
-		//ROFL_DEBUG("\n  %s : % d  FIXED ENTRY  \n ", __FILE__,__LINE__);
+		ROFL_DEBUG("\n  %s : % d  FIXED ENTRY  \n ", __FILE__,__LINE__);
 		
 		if(netfpga_write_reg(nfpga, NETFPGA_OF_BASE_ADDR_REG, NETFPGA_EXACT_BASE + entry->hw_pos) != ROFL_SUCCESS)//NETFPGA_EXACT_BASE			0x0000
 			return ROFL_FAILURE;
 	}else{
 		
-		//ROFL_DEBUG("\n  %s : % d  WILD CARD  \n ", __FILE__,__LINE__);
+		ROFL_DEBUG("\n  %s : % d  WILD CARD  \n ", __FILE__,__LINE__);
 		if(netfpga_write_reg(nfpga, NETFPGA_OF_BASE_ADDR_REG, NETFPGA_WILDCARD_BASE + entry->hw_pos) != ROFL_SUCCESS)
 			return ROFL_FAILURE;
 	}
+
+
+
+//////////////LOGS//////////////////////////////////////////////////////////////////////
+
+
+	netfpga_align_mac_addr_t dst_mac=(netfpga_align_mac_addr_t)entry->matches->eth_dst;
+	netfpga_align_mac_addr_t src_mac=(netfpga_align_mac_addr_t)entry->matches->eth_src;
+
 	
+
+	if(entry->type == NETFPGA_FE_FIXED ){
+		ROFL_DEBUG("entry type FIXED \n");
+	}else{
+		ROFL_DEBUG("entry type WILDCARD \n");
+	}
+
+	ROFL_DEBUG(" add_entry_hw matches transp_dst: %x, transp_src: %x, ip_proto: %x, ip_dst: %x, ip_src: %x, eth_type: %x, eth_dst: %x:%x:%x:%x:%x:%x, eth_src: %x:%x:%x:%x:%x:%x, src_port: %x, \n hw_pos: %x ",
+	entry->matches->transp_dst,
+	entry->matches->transp_src,
+	entry->matches->ip_proto,
+	entry->matches->ip_dst,
+	entry->matches->ip_src,
+	entry->matches->eth_type,
+	dst_mac.addr[0],dst_mac.addr[1],dst_mac.addr[2],dst_mac.addr[3],dst_mac.addr[4],dst_mac.addr[5],
+	src_mac.addr[0],src_mac.addr[1],src_mac.addr[2],src_mac.addr[3],src_mac.addr[4],src_mac.addr[5],
+	entry->matches->src_port,
+	entry->hw_pos
+	//sizeof(entry->matches->eth_dst)
+	 );
+
+
+	dst_mac=(netfpga_align_mac_addr_t)entry->actions->eth_dst;
+	src_mac=(netfpga_align_mac_addr_t)entry->actions->eth_src;
+
+	ROFL_DEBUG( "\n actions forward_bitmask: %x, action_flag: %x, vlan_id: %x, vlan_pcp: %x, eth_dst: %x:%x:%x:%x:%x:%x, eth_src: %x:%x:%x:%x:%x:%x, ip_src: %x, ip_dst %x, ip_tos %x, transp_src: %x, transp_dst %x ",
+
+	entry->actions->forward_bitmask,
+	entry->actions->action_flags,
+	entry->actions->vlan_id,
+	entry->actions->vlan_pcp,
+	dst_mac.addr[0],dst_mac.addr[1],dst_mac.addr[2],dst_mac.addr[3],dst_mac.addr[4],dst_mac.addr[5],
+	src_mac.addr[0],src_mac.addr[1],src_mac.addr[2],src_mac.addr[3],src_mac.addr[4],src_mac.addr[5],
+	entry->actions->ip_src,
+	entry->actions->ip_dst,
+	entry->actions->ip_tos,
+	entry->actions->transp_src,
+	entry->actions->transp_dst
+	);
+
+
+
+
+
+
+
+
+	dst_mac=(netfpga_align_mac_addr_t)entry->masks->eth_dst;
+	src_mac=(netfpga_align_mac_addr_t)entry->masks->eth_src;
+
+
+	ROFL_DEBUG("\n MASK ip_dst: %x, ip_src: %x, eth_type: %x, eth_dst: %x:%x:%x:%x:%x:%x, eth_src: %x:%x:%x:%x:%x:%x, src_port: %x \n\n",
+	entry->masks->ip_dst,
+	entry->masks->ip_src,
+	entry->masks->eth_type,
+	dst_mac.addr[0],dst_mac.addr[1],dst_mac.addr[2],dst_mac.addr[3],dst_mac.addr[4],dst_mac.addr[5],
+	src_mac.addr[0],src_mac.addr[1],src_mac.addr[2],src_mac.addr[3],src_mac.addr[4],src_mac.addr[5],
+	entry->masks->src_port
+	 );
+
+
+
+
+
+
+
+
+
+//////////////////////////LOGS FINISH////////////////////////////////////////////////////////////////////	
 
 
 
@@ -325,7 +403,7 @@ rofl_result_t netfpga_set_table_behaviour(void){
 
 //Add flow entry to table 
 rofl_result_t netfpga_add_flow_entry(of1x_flow_entry_t* entry){
-	//ROFL_DEBUG("%s : %d GOT FLOW ENTRY! \n", __FILE__,__LINE__);
+	ROFL_DEBUG("%s : %d GOT FLOW ENTRY! \n", __FILE__,__LINE__);
 	//Map entry to a hw entry
 
 	//ROFL_DEBUG("",entry->matchs->    ,            ,             );
