@@ -132,6 +132,24 @@ static rofl_result_t netfpga_add_entry_hw(netfpga_flow_entry_t* entry){
 	 );
 
 
+
+	dst_mac=(netfpga_align_mac_addr_t)entry->masks->eth_dst;
+	src_mac=(netfpga_align_mac_addr_t)entry->masks->eth_src;
+
+
+	ROFL_DEBUG("\n MASK  transp_dst: %x, transp_src: %x, ip_proto: %x, ip_dst: %x, ip_src: %x, eth_type: %x, eth_dst: %x:%x:%x:%x:%x:%x, eth_src: %x:%x:%x:%x:%x:%x, src_port: %x \n\n",
+	entry->masks->transp_dst,
+	entry->masks->transp_src,
+	entry->masks->ip_proto,
+	entry->masks->ip_dst,
+	entry->masks->ip_src,
+	entry->masks->eth_type,
+	dst_mac.addr[0],dst_mac.addr[1],dst_mac.addr[2],dst_mac.addr[3],dst_mac.addr[4],dst_mac.addr[5],
+	src_mac.addr[0],src_mac.addr[1],src_mac.addr[2],src_mac.addr[3],src_mac.addr[4],src_mac.addr[5],
+	entry->masks->src_port
+	);
+
+
 	dst_mac=(netfpga_align_mac_addr_t)entry->actions->eth_dst;
 	src_mac=(netfpga_align_mac_addr_t)entry->actions->eth_src;
 
@@ -157,18 +175,7 @@ static rofl_result_t netfpga_add_entry_hw(netfpga_flow_entry_t* entry){
 
 
 
-	dst_mac=(netfpga_align_mac_addr_t)entry->masks->eth_dst;
-	src_mac=(netfpga_align_mac_addr_t)entry->masks->eth_src;
-
-
-	ROFL_DEBUG("\n MASK ip_dst: %x, ip_src: %x, eth_type: %x, eth_dst: %x:%x:%x:%x:%x:%x, eth_src: %x:%x:%x:%x:%x:%x, src_port: %x \n\n",
-	entry->masks->ip_dst,
-	entry->masks->ip_src,
-	entry->masks->eth_type,
-	dst_mac.addr[0],dst_mac.addr[1],dst_mac.addr[2],dst_mac.addr[3],dst_mac.addr[4],dst_mac.addr[5],
-	src_mac.addr[0],src_mac.addr[1],src_mac.addr[2],src_mac.addr[3],src_mac.addr[4],src_mac.addr[5],
-	entry->masks->src_port
-	 );
+	 
 
 
 

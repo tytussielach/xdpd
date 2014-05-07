@@ -183,17 +183,18 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
 					num_of_matches++;
 				break;
  			case OF1X_MATCH_ETH_TYPE:
-				matches->eth_type = of1x_get_match_value16(match);	
+				matches->eth_type = of1x_get_match_value16(match);
+				masks->eth_type =~( of1x_get_match_mask16(match));	
 				num_of_matches++;
 				break;
  			case OF1X_MATCH_VLAN_PCP:
 				matches->vlan_id = (of1x_get_match_value8(match) << VID_PCP_SHIFT_BITS) &VID_PCP_BITMASK;
-				masks->vlan_id |= 0x7<< VID_PCP_SHIFT_BITS;
+				masks->vlan_id |= ~(0x7<< VID_PCP_SHIFT_BITS);
 				num_of_matches++;
  				break;	
 			case OF1X_MATCH_VLAN_VID:
 				matches->vlan_id = of1x_get_match_value16(match); 
-				masks->vlan_id |= VID_BITMASK; //Exact
+				masks->vlan_id |= ~(VID_BITMASK); //Exact
 				num_of_matches++;
 				break;
  			case OF1X_MATCH_IP_DSCP:
@@ -203,7 +204,7 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
 				break;
  			case OF1X_MATCH_NW_PROTO:
 				matches->ip_proto = of1x_get_match_value8(match);
-				masks->ip_proto = 0xFF;
+				masks->ip_proto = 0x00;
 				num_of_matches++;
 				break;
  			case OF1X_MATCH_NW_SRC:
@@ -212,9 +213,10 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
 				matches->ip_src = of1x_get_match_value32(match);
 				tmp_ipv4_mask =  of1x_get_match_mask32(match);
 				
-				memset(&masks->ip_src,0x00,sizeof(masks->ip_src));
-				if(tmp_ipv4_mask != 0xFFFF && tmp_ipv4_mask != 0x0){
+				memset(&(masks->ip_src),0x00,sizeof(masks->ip_src));
+				if(tmp_ipv4_mask != 0xFFFFFFFF && tmp_ipv4_mask != 0x0){
 					//Is wildcarded
+					ROFL_DEBUG("DUPADUPA");
 					masks->ip_src = tmp_ipv4_mask;					 
   				}else
 					num_of_matches++;
@@ -227,9 +229,10 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
 				matches->ip_dst = of1x_get_match_value32(match);
 				tmp_ipv4_mask = of1x_get_match_mask32(match);
 				
-				memset(&masks->ip_dst,0x00,sizeof(masks->ip_dst));
-				if(tmp_ipv4_mask != 0xFFFF && tmp_ipv4_mask != 0x0){
+				memset(&(masks->ip_dst),0x00,sizeof(masks->ip_dst));
+				if(tmp_ipv4_mask != 0xFFFFFFFF && tmp_ipv4_mask != 0x0){
 					//Is wildcarded
+					ROFL_DEBUG("DUPADUPA");
 					masks->ip_dst = tmp_ipv4_mask;
 					
  				}else
@@ -239,12 +242,15 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
  			
 			case OF1X_MATCH_TP_SRC:
 				matches->transp_src = of1x_get_match_value16(match);  
-				masks->transp_src = 0xFFFF;
+				masks->transp_src = ~(of1x_get_match_mask16(match)); //0x0000;
+				if (masks->transp_src ==0x00) masks->transp_src =0xFFFF;
+				
 				num_of_matches++;
 				break;
  			case OF1X_MATCH_TP_DST:
 				matches->transp_dst = of1x_get_match_value16(match);	
-				masks->transp_dst = 0xFFFF;
+				masks->transp_dst = ~(of1x_get_match_mask16(match)); //0x0000;
+				if (masks->transp_dst ==0x00) masks->transp_dst =0xFFFF;
 				num_of_matches++;
 				break;
 			
