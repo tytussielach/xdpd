@@ -183,8 +183,10 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
 					num_of_matches++;
 				break;
  			case OF1X_MATCH_ETH_TYPE:
-				matches->eth_type = of1x_get_match_value16(match);
-				masks->eth_type =~( of1x_get_match_mask16(match));	
+				//memcpy(&(matches->eth_type), (&(match->__tern->value.u16)) , 2);//
+				matches->eth_type=of1x_get_match_value16(match);
+				//masks->eth_type =0xFFFF;//
+				masks->eth_type =~( of1x_get_match_mask16(match));
 				num_of_matches++;
 				break;
  			case OF1X_MATCH_VLAN_PCP:
@@ -204,14 +206,14 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
 				break;
  			case OF1X_MATCH_NW_PROTO:
 				matches->ip_proto = of1x_get_match_value8(match);
-				masks->ip_proto = 0x00;
+				masks->ip_proto = ~(of1x_get_match_mask8(match));//0xFF;// 0x00;
 				num_of_matches++;
 				break;
  			case OF1X_MATCH_NW_SRC:
 				ROFL_DEBUG("of1x_entry src_ip: %d ", of1x_get_match_value32(match));
 				
 				matches->ip_src = of1x_get_match_value32(match);
-				tmp_ipv4_mask =  of1x_get_match_mask32(match);
+				tmp_ipv4_mask = of1x_get_match_mask32(match);
 				
 				memset(&(masks->ip_src),0x00,sizeof(masks->ip_src));
 				if(tmp_ipv4_mask != 0xFFFFFFFF && tmp_ipv4_mask != 0x0){
@@ -227,7 +229,7 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
 				ROFL_DEBUG("of1x_entry dst_ip: %d ", of1x_get_match_value32(match));
 				
 				matches->ip_dst = of1x_get_match_value32(match);
-				tmp_ipv4_mask = of1x_get_match_mask32(match);
+				tmp_ipv4_mask =  of1x_get_match_mask32(match);
 				
 				memset(&(masks->ip_dst),0x00,sizeof(masks->ip_dst));
 				if(tmp_ipv4_mask != 0xFFFFFFFF && tmp_ipv4_mask != 0x0){
