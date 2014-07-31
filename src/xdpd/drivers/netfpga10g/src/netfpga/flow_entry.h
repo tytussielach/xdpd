@@ -97,8 +97,12 @@ typedef struct netfpga_flow_entry_actions {
 
 COMPILER_ASSERT( FLOW_ENTRY_ACTIONS, ( sizeof(netfpga_flow_entry_actions_t) == 40) );
 
-#define NETFPGA_FLOW_ENTRY_ACTIONS_WORD_LEN (sizeof(netfpga_flow_entry_actions_t)/4)
 
+
+
+
+#define NETFPGA_FLOW_ENTRY_ACTIONS_WORD_LEN (sizeof(netfpga_flow_entry_actions_t)/4)
+//#define NETFPGA_FLOW_ENTRY_STATS_WORD_LEN (sizeof(netfpga_flow_entry_stats_t)/4
 #pragma pack(pop)
 
 //Type of entry
@@ -148,6 +152,8 @@ void netfpga_destroy_flow_entry(netfpga_flow_entry_t* entry);
 * @brief Generates a HW flow entry based on a ROFL-pipeline flow entry 
 */
 netfpga_flow_entry_t* netfpga_generate_hw_flow_entry(netfpga_device_t* nfpga, of1x_flow_entry_t* of1x_entry);
+
+
 
 //C++ extern C
 ROFL_END_DECLS

@@ -7,6 +7,12 @@
 #include <rofl/common/utils/c_logger.h>
 
 
+
+
+
+
+
+
 bool check_mac_mask(netfpga_align_mac_addr_t* mac){	
 	int i=0	;
 	ROFL_DEBUG("MAC ADDRESS MASK: ");
@@ -38,6 +44,21 @@ void fill_up_mac(netfpga_align_mac_addr_t* mac){
 		ROFL_DEBUG("MAC ADDRESS filled up ");
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -135,9 +156,12 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
 				matches->src_port = 0x1 << (( of1x_get_match_value32(match) - NETFPGA_PORT_BASE) *2);
 				masks->src_port = 0x00; //Exact
 				num_of_matches++;
+
+				ROFL_DEBUG("\n IN_PORT");
+
 				break;
  			case OF1X_MATCH_ETH_DST:
-		
+				ROFL_DEBUG("\n eth_dst");
 				
 				memcpy(&matches->eth_dst.addr, &(match->__tern->value.u64), 6);
 				memcpy(&masks->eth_dst.addr, &(match->__tern->mask.u64), 6);
@@ -167,6 +191,8 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
 				break;
  			case OF1X_MATCH_ETH_SRC:
 				
+				ROFL_DEBUG("\n eth src");
+
 				memcpy(&matches->eth_src.addr, &(match->__tern->value.u64), 6);
 				memcpy(&masks->eth_src.addr, &(match->__tern->mask.u64), 6);
 				
@@ -183,55 +209,64 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
 					num_of_matches++;
 				break;
  			case OF1X_MATCH_ETH_TYPE:
+				ROFL_DEBUG("\n eth type");
 				//memcpy(&(matches->eth_type), (&(match->__tern->value.u16)) , 2);//
 				matches->eth_type=of1x_get_match_value16(match);
-				//masks->eth_type =0xFFFF;//
+				//masks->eth_type =of1x_get_match_mask16(match);
 				masks->eth_type =~( of1x_get_match_mask16(match));
 				num_of_matches++;
 				break;
  			case OF1X_MATCH_VLAN_PCP:
+				ROFL_DEBUG("\n vlan pcp");
+
 				matches->vlan_id = (of1x_get_match_value8(match) << VID_PCP_SHIFT_BITS) &VID_PCP_BITMASK;
 				masks->vlan_id |= ~(0x7<< VID_PCP_SHIFT_BITS);
 				num_of_matches++;
  				break;	
 			case OF1X_MATCH_VLAN_VID:
+				ROFL_DEBUG("\n VLAN_VID");
+
 				matches->vlan_id = of1x_get_match_value16(match); 
 				masks->vlan_id |= ~(VID_BITMASK); //Exact
 				num_of_matches++;
 				break;
  			case OF1X_MATCH_IP_DSCP:
+				ROFL_DEBUG("\n IP DSCP=IPTOS");
 				matches->ip_tos = of1x_get_match_value8(match); 
 				masks->ip_tos |= TOS_DSCP_BITMASK;  
 				num_of_matches++;
 				break;
  			case OF1X_MATCH_NW_PROTO:
+				ROFL_DEBUG("\n IP proto");
 				matches->ip_proto = of1x_get_match_value8(match);
-				masks->ip_proto = ~(of1x_get_match_mask8(match));//0xFF;// 0x00;
+				masks->ip_proto = ~(of1x_get_match_mask8(match));// 0x00;
 				num_of_matches++;
 				break;
  			case OF1X_MATCH_NW_SRC:
-				ROFL_DEBUG("of1x_entry src_ip: %d ", of1x_get_match_value32(match));
+				ROFL_DEBUG("\n src_ip: %d ", of1x_get_match_value32(match));
 				
 				matches->ip_src = of1x_get_match_value32(match);
-				tmp_ipv4_mask = of1x_get_match_mask32(match);
-				
+				tmp_ipv4_mask = ~(of1x_get_match_mask32(match));
+				/*
 				memset(&(masks->ip_src),0x00,sizeof(masks->ip_src));
 				if(tmp_ipv4_mask != 0xFFFFFFFF && tmp_ipv4_mask != 0x0){
 					//Is wildcarded
 					ROFL_DEBUG("DUPADUPA");
 					masks->ip_src = tmp_ipv4_mask;					 
   				}else
-					num_of_matches++;
-				
+					num_of_matches++;*/
+
+				masks->ip_src=tmp_ipv4_mask;//0x0000;
+				num_of_matches++;
 				break;
  			case OF1X_MATCH_NW_DST:
 
-				ROFL_DEBUG("of1x_entry dst_ip: %d ", of1x_get_match_value32(match));
+				ROFL_DEBUG("\n dst_ip: %d ", of1x_get_match_value32(match));
 				
 				matches->ip_dst = of1x_get_match_value32(match);
-				tmp_ipv4_mask =  of1x_get_match_mask32(match);
-				
-				memset(&(masks->ip_dst),0x00,sizeof(masks->ip_dst));
+				tmp_ipv4_mask =  ~(of1x_get_match_mask32(match));
+				masks->ip_dst = tmp_ipv4_mask;
+				/*memset(&(masks->ip_dst),0x00,sizeof(masks->ip_dst));
 				if(tmp_ipv4_mask != 0xFFFFFFFF && tmp_ipv4_mask != 0x0){
 					//Is wildcarded
 					ROFL_DEBUG("DUPADUPA");
@@ -239,20 +274,22 @@ static rofl_result_t netfpga_flow_entry_map_matches(netfpga_flow_entry_t* entry,
 					
  				}else
 					num_of_matches++;
-				
+				*/
 				break;
  			
 			case OF1X_MATCH_TP_SRC:
+				ROFL_DEBUG("\n TP SRC");
 				matches->transp_src = of1x_get_match_value16(match);  
 				masks->transp_src = ~(of1x_get_match_mask16(match)); //0x0000;
-				if (masks->transp_src ==0x00) masks->transp_src =0xFFFF;
+				//if (masks->transp_src ==0x00) masks->transp_src =0xFFFF;
 				
 				num_of_matches++;
 				break;
  			case OF1X_MATCH_TP_DST:
+				ROFL_DEBUG("\n TP DST");
 				matches->transp_dst = of1x_get_match_value16(match);	
 				masks->transp_dst = ~(of1x_get_match_mask16(match)); //0x0000;
-				if (masks->transp_dst ==0x00) masks->transp_dst =0xFFFF;
+				//if (masks->transp_dst ==0x00) masks->transp_dst =0xFFFF;
 				num_of_matches++;
 				break;
 			
@@ -283,10 +320,10 @@ static rofl_result_t netfpga_flow_entry_map_actions(netfpga_flow_entry_t* entry,
 
 	action = of1x_entry->inst_grp.instructions[OF1X_IT_APPLY_ACTIONS].apply_actions->head;
 	
-	if(!action){
+	/*if(!action){
 		assert(0);
 		return ROFL_FAILURE;
-	}
+	}*/
 	
 	//Loop over apply actions only
 	for(; action; action = action->next){

@@ -10,7 +10,8 @@
 #include "../util/compiler_assert.h"
 #include <rofl/datapath/pipeline/openflow/openflow1x/pipeline/of1x_pipeline.h>
 #include <rofl/datapath/pipeline/openflow/openflow1x/pipeline/of1x_flow_entry.h>
-#include "netfpga.h"
+//#include "netfpga.h"
+
 
 /**
 * @file stats.h

@@ -131,6 +131,8 @@ void platform_of1x_notify_flow_removed(const of1x_switch_t* sw,
 
 void plaftorm_of1x_add_entry_hook(of1x_flow_entry_t* new_entry){
 
+	ROFL_DEBUG("FlowMod adding");
+
 	//Lock netfpga
 	netfpga_lock();
 	
@@ -143,6 +145,9 @@ void plaftorm_of1x_add_entry_hook(of1x_flow_entry_t* new_entry){
 }
 
 void platform_of1x_modify_entry_hook(of1x_flow_entry_t* old_entry, of1x_flow_entry_t* mod, int reset_count){
+
+	ROFL_DEBUG("FlowMod modification");
+
 
 	//Lock netfpga
 	netfpga_lock();

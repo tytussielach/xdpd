@@ -19,6 +19,65 @@ static netfpga_device_t* nfpga=NULL;
  * Internal HW stuff
  */
 
+
+
+
+
+rofl_result_t netfpga_read_flow_stats(netfpga_flow_entry_t* entry , netfpga_flow_entry_stats_t* stats){
+      
+
+
+ unsigned int i;
+ uint32_t* aux;
+//Wait for the netfpga to be ready
+netfpga_wait_reg_ready(nfpga);
+
+     
+             	//Set Row address
+	if(entry->type == NETFPGA_FE_FIXED ){
+		ROFL_DEBUG("\n  %s : % d  FIXED ENTRY  \n ", __FILE__,__LINE__);
+		
+		if(netfpga_write_reg(nfpga, NETFPGA_OF_BASE_ADDR_REG, NETFPGA_EXACT_BASE + entry->hw_pos) != ROFL_SUCCESS)//NETFPGA_EXACT_BASE			0x0000
+			return ROFL_FAILURE;
+	}else{
+		
+		ROFL_DEBUG("\n  %s : % d  WILD CARD  \n ", __FILE__,__LINE__);
+		if(netfpga_write_reg(nfpga, NETFPGA_OF_BASE_ADDR_REG, NETFPGA_WILDCARD_BASE + entry->hw_pos) != ROFL_SUCCESS)
+			return ROFL_FAILURE;
+	}
+       
+               //Write whatever => Trigger read
+               if(netfpga_write_reg(nfpga, NETFPGA_OF_READ_ORDER_REG, 0x1) != ROFL_SUCCESS)
+                       return ROFL_FAILURE;
+
+
+		//Wait for the netfpga to be ready
+       		netfpga_wait_reg_ready(nfpga);
+ 
+		//Read stats
+		
+		aux = (uint32_t*)stats;
+               for (i = 0; i < NETFPGA_FLOW_ENTRY_ACTIONS_WORD_LEN; ++i) {
+                       if(netfpga_read_reg(nfpga, NETFPGA_OF_LOOKUP_ACTION_BASE_REG + i, (aux+i)) != ROFL_SUCCESS)     
+                               return ROFL_FAILURE;
+               }
+
+                 
+               
+       
+
+       return ROFL_SUCCESS;
+
+
+
+
+}
+
+
+
+
+
+
 //Dump wildcard entries
 rofl_result_t netfpga_dump_wildcard_hw_entries(){
 
@@ -79,6 +138,9 @@ rofl_result_t netfpga_dump_wildcard_hw_entries(){
        return ROFL_SUCCESS;
 }
 
+
+
+
 //Specific add command for wildcard entries
 static rofl_result_t netfpga_add_entry_hw(netfpga_flow_entry_t* entry){
 	ROFL_DEBUG("\n  %s : % d  netfpga_add_entry_hw  \n ", __FILE__,__LINE__);
@@ -104,7 +166,7 @@ static rofl_result_t netfpga_add_entry_hw(netfpga_flow_entry_t* entry){
 
 
 //////////////LOGS//////////////////////////////////////////////////////////////////////
-
+/*
 
 	netfpga_align_mac_addr_t dst_mac=(netfpga_align_mac_addr_t)entry->matches->eth_dst;
 	netfpga_align_mac_addr_t src_mac=(netfpga_align_mac_addr_t)entry->matches->eth_src;
@@ -131,6 +193,9 @@ static rofl_result_t netfpga_add_entry_hw(netfpga_flow_entry_t* entry){
 	//sizeof(entry->matches->eth_dst)
 	 );
 
+
+
+ROFL_DEBUG(" add_entry_hw matches RAW %x %x %x %x %x %x %x %x", *((uint32_t*)entry->matches),*(((uint32_t*)entry->matches)+1),*(((uint32_t*)entry->matches)+2),*(((uint32_t*)entry->matches)+3),*(((uint32_t*)entry->matches)+4),*(((uint32_t*)entry->matches)+5),*(((uint32_t*)entry->matches)+6),*(((uint32_t*)entry->matches)+7));
 
 
 	dst_mac=(netfpga_align_mac_addr_t)entry->masks->eth_dst;
@@ -183,7 +248,7 @@ static rofl_result_t netfpga_add_entry_hw(netfpga_flow_entry_t* entry){
 
 
 
-
+*/
 
 //////////////////////////LOGS FINISH////////////////////////////////////////////////////////////////////	
 

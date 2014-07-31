@@ -34,9 +34,18 @@ void netpfga_io_read_from_port(switch_port_t* port){
 	/* Grab a packet */
 	packet = pcap_next(state->pcap_fd, &header);
 
-	if (header.len < 0) 
+	if (packet==NULL)
+		{
+			ROFL_DEBUG(" packet_io.cc Reading to a socket unsuccessful: %d",errno);
+			return;
+		}
+
+
+
+	if (header.len < 0) {
 		ROFL_DEBUG(" packet_io.cc Reading to a socket unsuccessful: %d",errno);
-	
+		return;
+		}
 	//ROFL_DEBUG(" in the buff %d \n",*buff);
 	//ROFL_DEBUG(" read size %d \n",header.len);
 
@@ -61,7 +70,7 @@ void netpfga_io_read_from_port(switch_port_t* port){
 	packet_matches_t* matches = &pkt->matches;
 	
 	//ROFL_DEBUG(" of1x_switch_t* %d , port->attached_sw %d ", sw, port->attached_sw);
-	ROFL_DEBUG("\n in port: %x ", pack->in_port);
+	ROFL_DEBUG("\n in port: %x,  store_id: %x , pkt_id: %x ", pack->in_port,storage_id,pkt->id);
 	
 
 	hal_result r=hal_cmm_process_of1x_packet_in(

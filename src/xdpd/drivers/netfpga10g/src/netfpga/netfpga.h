@@ -41,6 +41,7 @@
 #define NETFPGA_POLYNOMIAL1	0x04C11DB7
 #define NETFPGA_POLYNOMIAL2	0x1EDC6F41 
 
+//fwd decl
 struct netfpga_flow_entry;
 
 typedef struct netfpga_device{
@@ -127,6 +128,10 @@ rofl_result_t netfpga_delete_flow_entry(of1x_flow_entry_t* entry);
 * @brief Deletes all entries within a table. Assumes already mutual exclusion over table 
 */
 rofl_result_t netfpga_delete_all_entries(void);
+
+
+rofl_result_t netfpga_read_flow_stats(struct netfpga_flow_entry* hw_entry, netfpga_flow_entry_stats_t* stats);
+
 
 
 //Dumping stuff, only used for debug
