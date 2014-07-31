@@ -12,12 +12,12 @@ Supported platforms (drivers)
 Shipped with all xDPd instances:
 - GNU/Linux amd64/x86 user-space with mmap or netmap (gnu-linux). open-source
 - GNU/Linux + NetFGPA-10G (netfpga10g). open-source. 
+- GNU/Linux Intel's DPDK accelerated driver (gnu-linux-dpdk). open-source
 
 Also available:
 
 - Broadcom Triumph2 (bcm).
 - Octeon network processors (octeon5650). 
-- GNU/Linux + DPDK (gnu-linux-dpdk).
 - Other: refer to the wiki page for more details
 
 You may want to have a look to the particular README pages of each platform by inspecting:
@@ -35,55 +35,89 @@ Requirements
 - [optional] if you want to run automatic tests (make check), libcunit and libcppunit are required (in libcunit1-dev and libcppunit-dev packages in Debian-like systems).
 - [optional] Doxygen to generate the documentation.
 
-[1] https://www.codebasin.net/redmine/projects/rofl-core/wiki
+[1] http://www.roflibs.org/, https://github.com/bisdn/rofl-core
+
 
 How to build
 ============
 
 Install the dependencies and run:
 
-sh# ./autogen.sh  
-sh# cd build  
-sh# ../configure  
-sh# make  
-sh# make install
+	sh# ./autogen.sh  
+	sh# cd build  
+	sh# ../configure  
+	sh# make  
+	sh# make install
 
-Optionally you can 'make check' for consistency checks.
+Optionally you can `make check` for consistency checks. For other platforms different than `gnu-linux`, please make sure `--with-hw-support=platform-name` is specified, and that the appropriate README is read (e.g. src/xdpd/drivers/example/README).
 
 How to run it
 ================================
 
 Copy the example.cfg: 
 
-sh# cd build/src/xdpd  
-sh# cp src/xdpd/management/plugins/config/example.cfg .  
+	sh# cd build/src/xdpd  
+	sh# cp ../../../src/xdpd/management/plugins/config/example.cfg .  
 
 Now edit the configuration. Make sure ports attached to the Logical Switch Instance (LSI) exist in the system.
 
-sh# vi src/xdpd/management/plugins/config/example.cfg  
+	sh# vi example.cfg  
 
 Run xdpd:
-
-sh# ./xdpd -c example.cfg
+	
+	sh# ./xdpd -c example.cfg
 
 Optional ../configure parameters
 ================================
 
---with-hw-support=platform-name: Compiles support for the platform-name (forwarding module). Default is gnu-linux.  
---with-plugins="plugin1...pluginN": Compile with plugin1..pluginN enabled. Default is --with-plugins="config" plugin.
---enable-debug: Compile with debug symbols (-g) and debug output (warning, it may affect performance).  
---disable-silent-rules: Enable verbose compilation mode (AM_SILENT_RULES disabled)  
+	--with-hw-support=platform-name: Compiles support for the platform-name (platform driver). Default is gnu-linux.   
+	--with-plugins="plugin1...pluginN": Compile with plugin1..pluginN enabled. Default is --with-plugins="config" plugin.  
+	--enable-debug: Compile with debug symbols (-g) and debug output (warning, it may affect performance).  
+	--disable-silent-rules: Enable verbose compilation mode (AM_SILENT_RULES disabled)   
+
+Known issues with Automake 1.14
+===============================
+
+xDPd package uses `subdir-objects`. From 1.14 on, the support of `subdir-objects` must be explicitly added in AM_INIT_AUTOMAKE() in order to prevent warnings that will abort compilation. However, due to the following bug:
+
+http://debbugs.gnu.org/cgi/bugreport.cgi?bug=13928
+
+The build system won't work if `subdir-objects` is added in AM_INIT_AUTOMAKE().
+
+Currently, in order to compile the package, the suggested strategy is to remove -Werror from AM_INIT_AUTOMAKE() in ALL the configure.ac-s (configure.ac, src/xdpd/drivers/example/configure.ac ...):
+
+	diff --git a/configure.ac b/configure.ac
+	index ccf3f21..96931b9 100644
+	--- a/configure.ac
+	+++ b/configure.ac
+	@@ -3,7 +3,7 @@ AC_INIT(xdpd, 0.4, xdpd@bisdn.de, xdpd)
+	 AC_CONFIG_AUX_DIR([build-aux])
+	 AC_CONFIG_MACRO_DIR([m4])
+	 
+	-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+	+AM_INIT_AUTOMAKE([-Wall foreign])
+	 
+	 AC_GNU_SOURCE
+
+Note there will be a considerably number of warnings shown. Once bug 13928, 'subdir-objects' will be added as it should be.
+
 
 Doxygen documentation
-================================
-Documentation can be compiled via 'make doc'. Documentation is generated in build/doc/ folder
+=====================
+
+You can have a look on: 
+
+http://www.xdpd.org/doc/
+
+Documentation can be compiled via `make doc`. Documentation is generated in build/doc/ folder
 
 More information, documentation and support
 ===========================================
 
-Please visit: 
+http://www.xdpd.org
+https://github.com/bisdn/xdpd
 
-https://www.codebasin.net/redmine/projects/xdpd/wiki
+For getting support or participate in the discussions, join the mailing list xdpd-devel@xdpd.org at https://lists.xdpd.org/mailman
 
 Authorship
 ==========

@@ -183,6 +183,12 @@ void parse_vlan(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 				parse_ipv4(clas_state, data, datalen);
 			}
 			break;
+		case ETH_TYPE_IPV6:
+			{
+				parse_ipv6(clas_state, data, datalen);
+			}
+			break;
+
 		default:
 			{
 
@@ -525,12 +531,17 @@ void parse_ipv6(classify_state_t* clas_state, uint8_t *data, size_t datalen){
 }
 
 void parse_icmpv6_opts(classify_state_t* clas_state, uint8_t *data, size_t datalen){
+	unsigned int continue_parsing = 1;
 	if (unlikely(datalen < sizeof(cpc_icmpv6_option_hdr_t))) { return; }
 	/*So far we only parse optionsICMPV6_OPT_LLADDR_TARGET, ICMPV6_OPT_LLADDR_SOURCE and ICMPV6_OPT_PREFIX_INFO*/
 	cpc_icmpv6_option_hdr_t* icmpv6_opt = (cpc_icmpv6_option_hdr_t*)data;
 	
 	//Set frame
 	unsigned int num_of_icmpv6_opt = clas_state->num_of_headers[HEADER_TYPE_ICMPV6_OPT];
+
+	//Make sure we have space in the headers array 
+	if(unlikely( num_of_icmpv6_opt >= MAX_ICMPV6_OPT_FRAMES ))
+		return;
 	
 	//we asume here that there is only one option for each type
 	switch(icmpv6_opt->type){
@@ -568,10 +579,19 @@ void parse_icmpv6_opts(classify_state_t* clas_state, uint8_t *data, size_t datal
 			get_icmpv6_pfx_aac_flag( (struct cpc_icmpv6_prefix_info *)icmpv6_opt );
 
 			break;
+		default:
+
+			if (icmpv6_opt->len < sizeof(cpc_icmpv6_option_hdr_t)) {
+				continue_parsing = 0;
+			}else{
+				data += icmpv6_opt->len;
+				datalen -= icmpv6_opt->len;
+			}
+			break;
 	}
 	clas_state->num_of_headers[HEADER_TYPE_ICMPV6_OPT] = num_of_icmpv6_opt+1;
 
-	if (datalen > 0){
+	if ((continue_parsing) && (datalen > 0)){
 		parse_icmpv6_opts(clas_state, data, datalen);
 	}
 }
@@ -1080,7 +1100,7 @@ void* push_pppoe(datapacket_t* pkt, classify_state_t* clas_state, uint16_t ether
 			 * adjust ether(0): move one pppoe tag to the left
 			 */
 			shift_ether(clas_state, 0, 0-bytes_to_insert); // shift left
-			ether_header-=sizeof(cpc_mpls_hdr_t); //We change also the local pointer
+			ether_header-=bytes_to_insert; //We change also the local pointer
 			set_ether_type(ether_header, ETH_TYPE_PPPOE_SESSION);
 
 			/*
@@ -1089,9 +1109,6 @@ void* push_pppoe(datapacket_t* pkt, classify_state_t* clas_state, uint16_t ether
 			push_header(clas_state, HEADER_TYPE_PPPOE, FIRST_PPPOE_FRAME_POS, FIRST_PPPOE_FRAME_POS+MAX_PPPOE_FRAMES);
 			push_header(clas_state, HEADER_TYPE_PPP, FIRST_PPP_FRAME_POS, FIRST_PPP_FRAME_POS+MAX_PPP_FRAMES);
 	
-			n_pppoe = (cpc_pppoe_hdr_t*)clas_state->headers[FIRST_PPPOE_FRAME_POS].frame;
-			n_ppp = (cpc_ppp_hdr_t*)clas_state->headers[FIRST_PPP_FRAME_POS].frame;
-
 			//Now reset frames
 			clas_state->headers[FIRST_PPPOE_FRAME_POS].frame = ether_header + sizeof(cpc_eth_hdr_t);
 			clas_state->headers[FIRST_PPPOE_FRAME_POS].length = get_buffer_length(pkt) + sizeof(cpc_pppoe_hdr_t) - sizeof(cpc_eth_hdr_t);
@@ -1101,6 +1118,8 @@ void* push_pppoe(datapacket_t* pkt, classify_state_t* clas_state, uint16_t ether
 			//n_pppoe->reset(ether_header->soframe() + sizeof(struct rofl::fetherframe::eth_hdr_t), ether_header->framelen() - sizeof(struct rofl::fetherframe::eth_hdr_t) );
 			//n_ppp->reset(n_pppoe->soframe() + sizeof(struct rofl::fpppoeframe::pppoe_hdr_t), n_pppoe->framelen() - sizeof(struct rofl::fpppoeframe::pppoe_hdr_t));
 	
+			n_pppoe = (cpc_pppoe_hdr_t*)clas_state->headers[FIRST_PPPOE_FRAME_POS].frame;
+			n_ppp = (cpc_ppp_hdr_t*)clas_state->headers[FIRST_PPP_FRAME_POS].frame;
 			/*
 			 * TODO: check if this is an appropiate fix 
 			 */
@@ -1125,7 +1144,7 @@ void* push_pppoe(datapacket_t* pkt, classify_state_t* clas_state, uint16_t ether
 			 * adjust ether(0): move one pppoe tag to the left
 			 */
 			shift_ether(clas_state, 0, 0-bytes_to_insert);//shift left
-			ether_header-=sizeof(cpc_mpls_hdr_t); //We change also the local pointer
+			ether_header-=bytes_to_insert; //We change also the local pointer
 			set_ether_type(get_ether_hdr(clas_state, 0), ETH_TYPE_PPPOE_DISCOVERY);
 
 			/*

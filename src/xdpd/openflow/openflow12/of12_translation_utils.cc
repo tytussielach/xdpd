@@ -226,18 +226,20 @@ of12_translation_utils::of12_map_flow_entry_matches(
 	try {
 		uint16_t value = ofmatch.get_vlan_vid_value();
 		uint16_t mask  = ofmatch.get_vlan_vid_mask();
-		enum of1x_vlan_present vlan_present = OF1X_MATCH_VLAN_NONE;
+		enum of1x_vlan_present vlan_present=OF1X_MATCH_VLAN_NONE;
 
 		if ((value == rofl::openflow12::OFPVID_PRESENT) && (mask == rofl::openflow12::OFPVID_PRESENT)){
 			vlan_present = OF1X_MATCH_VLAN_ANY;
-		} else
-		if (value & rofl::openflow12::OFPVID_PRESENT) {
+		}else if (value == rofl::openflow12::OFPVID_NONE && mask==0xFFFF){
+			vlan_present = OF1X_MATCH_VLAN_NONE;
+		}else if (value /*&& mask == 0xFFFF*/){
 			vlan_present = OF1X_MATCH_VLAN_SPECIFIC;
+		}else{
+			//Invalid 
+			assert(0);
 		}
 		
-		match = of1x_init_vlan_vid_match(ofmatch.get_vlan_vid_value() & ~openflow::OFPVID_PRESENT,
-							ofmatch.get_vlan_vid_mask(),
-							vlan_present);
+		match = of1x_init_vlan_vid_match(value, mask, vlan_present);
 		of1x_add_match_to_entry(entry, match);
 	} catch(...) {}
 
@@ -878,7 +880,7 @@ of12_translation_utils::of12_map_reverse_flow_entry_matches(
 				caddress mask(AF_INET, "0.0.0.0");
 				addr.set_ipv4_addr(of1x_get_match_value32(m));
 				mask.set_ipv4_addr(of1x_get_match_mask32(m));
-				match.set_arp_spa(addr);
+				match.set_arp_spa(addr, mask);
 			}
 				break;
 			case OF1X_MATCH_ARP_THA:
@@ -1117,7 +1119,10 @@ of12_translation_utils::of12_map_reverse_flow_entry_instruction(
 			instruction.get_actions().append_action(action);
 		}
 	} break;
-	case OF1X_IT_WRITE_METADATA:
+	case OF1X_IT_WRITE_METADATA: {
+		instruction = rofl::openflow::cofinst_write_metadata(rofl::openflow12::OFP_VERSION,
+				inst->write_metadata.metadata, inst->write_metadata.metadata_mask);
+	} break;
 	case OF1X_IT_EXPERIMENTER: {
 		// TODO: both are marked TODO in of1x_pipeline
 	} break;
