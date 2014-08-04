@@ -443,13 +443,7 @@ of1x_stats_flow_msg_t* hal_driver_of1x_get_flow_stats(uint64_t dpid, uint8_t tab
 
 	of1x_switch_t* lsw;
 
-	//init stats structure
-	netfpga_flow_entry_stats_t* stats;
 
-	stats=(netfpga_flow_entry_stats_t*)malloc(sizeof(netfpga_flow_entry_stats_t));
-
-
-	memset(stats, 0xAA, sizeof(*(stats)));
 
 	//Recover port	
 	lsw = (of1x_switch_t*)physical_switch_get_logical_switch_by_dpid(dpid);
@@ -480,18 +474,22 @@ of1x_stats_flow_msg_t* hal_driver_of1x_get_flow_stats(uint64_t dpid, uint8_t tab
 	
 		hw_entry=(netfpga_flow_entry*)entry->platform_state;
 			
-		netfpga_read_flow_stats(hw_entry, stats);
+		netfpga_read_flow_stats(hw_entry);
 
-		entry->stats.packet_count =  entry->stats.packet_count + stats->pkt_counter;
-		entry->stats.byte_count   =  entry->stats.byte_count   + stats->byte_counter;
+		entry->stats.packet_count =  entry->stats.packet_count + (hw_entry->stats->pkt_counter - entry->stats.packet_count);
+		entry->stats.byte_count   =  entry->stats.byte_count   + (hw_entry->stats->byte_counter - entry->stats.byte_count );
 
 		if (entry->next != NULL) entry=entry->next;
+		ROFL_DEBUG("\n  Entry stats: packet: %d byte: %d",hw_entry->stats->pkt_counter, hw_entry->stats->byte_counter );
 
 	}
 
+
+
+
 	platform_mutex_unlock(mutex);
 
-
+	
 
 
 	
@@ -515,6 +513,7 @@ of1x_stats_flow_msg_t* hal_driver_of1x_get_flow_stats(uint64_t dpid, uint8_t tab
  */
 of1x_stats_flow_aggregate_msg_t* hal_driver_of1x_get_flow_aggregate_stats(uint64_t dpid, uint8_t table_id, uint32_t cookie, uint32_t cookie_mask, uint32_t out_port, uint32_t out_group, of1x_match_group_t *const matches){
 
+	ROFL_DEBUG("\n    begin of of1x get agregate stats");
 	of1x_switch_t* lsw;
 
 	//Recover port	
@@ -527,6 +526,54 @@ of1x_stats_flow_aggregate_msg_t* hal_driver_of1x_get_flow_aggregate_stats(uint64
 
 	if(table_id >= lsw->pipeline.num_of_tables && table_id != OF1X_FLOW_TABLE_ALL)
 		return NULL; 
+
+
+	
+
+
+	platform_mutex_t* mutex=lsw->pipeline.tables[0].mutex;
+	
+	
+
+	platform_mutex_lock(mutex);
+	ROFL_DEBUG("\n   after_mutex_lock");
+
+	of1x_flow_entry_t* entry;
+	entry=(of1x_flow_entry_t*)(lsw->pipeline.tables[0].entries);
+
+	netfpga_flow_entry* hw_entry;
+	
+	ROFL_DEBUG("\n  Number of entries: %d",lsw->pipeline.tables[0].num_of_entries  );
+
+	uint32_t i;
+	for(i=0 ; i< (lsw->pipeline.tables[0].num_of_entries) ; i++){
+		
+	
+		hw_entry=(netfpga_flow_entry*)entry->platform_state;
+			
+		netfpga_read_flow_stats(hw_entry);
+
+		entry->stats.packet_count =  entry->stats.packet_count + (hw_entry->stats->pkt_counter - entry->stats.packet_count);
+		entry->stats.byte_count   =  entry->stats.byte_count   + (hw_entry->stats->byte_counter - entry->stats.byte_count );
+
+		if (entry->next != NULL) entry=entry->next;
+		ROFL_DEBUG("\n  Entry stats: packet: %d byte: %d",hw_entry->stats->pkt_counter, hw_entry->stats->byte_counter );
+
+	}
+
+
+
+
+	platform_mutex_unlock(mutex);
+
+	
+
+
+
+
+
+	ROFL_DEBUG("\n  of1x get agregate stats finished");
+
 
 	return of1x_get_flow_aggregate_stats(&lsw->pipeline, table_id, cookie, cookie_mask, out_port, out_group, matches);
 } 

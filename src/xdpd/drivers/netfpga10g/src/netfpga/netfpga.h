@@ -130,7 +130,7 @@ rofl_result_t netfpga_delete_flow_entry(of1x_flow_entry_t* entry);
 rofl_result_t netfpga_delete_all_entries(void);
 
 
-rofl_result_t netfpga_read_flow_stats(struct netfpga_flow_entry* hw_entry, netfpga_flow_entry_stats_t* stats);
+rofl_result_t netfpga_read_flow_stats(struct netfpga_flow_entry* hw_entry);
 
 
 

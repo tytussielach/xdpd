@@ -130,6 +130,9 @@ typedef struct netfpga_flow_entry{
 
 	//Reference back to the sw pipeline entry
 	of1x_flow_entry_t* ref_back;
+
+	netfpga_flow_entry_stats_t* stats;
+
 }netfpga_flow_entry_t;
 
 //Function prototypes

@@ -98,10 +98,23 @@ netfpga_flow_entry_t* netfpga_init_flow_entry(){
 		return NULL;	
 	}
 	
+
+	//Allocate stats	
+	entry->stats = malloc(sizeof(netfpga_flow_entry_stats_t));
+	if(!entry->actions){
+		free(entry->matches);
+		free(entry->masks);
+		free(entry->actions);
+		free(entry);
+		return NULL;	
+	}
+
+
 	//Init all	
 	memset(entry->matches, 0, sizeof(*(entry->matches)));
 	memset(entry->masks, 0, sizeof(*(entry->masks)));
 	memset(entry->actions, 0, sizeof(*(entry->actions)));
+	memset(entry->stats, 0, sizeof(*(entry->stats)));
 
 	ROFL_DEBUG("size of entry: %d",sizeof(entry));
 	

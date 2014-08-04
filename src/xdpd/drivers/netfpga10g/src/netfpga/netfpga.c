@@ -23,7 +23,7 @@ static netfpga_device_t* nfpga=NULL;
 
 
 
-rofl_result_t netfpga_read_flow_stats(netfpga_flow_entry_t* entry , netfpga_flow_entry_stats_t* stats){
+rofl_result_t netfpga_read_flow_stats(netfpga_flow_entry_t* entry){
       
 
 
@@ -56,7 +56,7 @@ netfpga_wait_reg_ready(nfpga);
  
 		//Read stats
 		
-		aux = (uint32_t*)stats;
+		aux = (uint32_t*)entry->stats;
                for (i = 0; i < NETFPGA_FLOW_ENTRY_ACTIONS_WORD_LEN; ++i) {
                        if(netfpga_read_reg(nfpga, NETFPGA_OF_LOOKUP_ACTION_BASE_REG + i, (aux+i)) != ROFL_SUCCESS)     
                                return ROFL_FAILURE;
